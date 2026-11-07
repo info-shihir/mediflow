@@ -18,8 +18,8 @@ import {MatIconModule} from '@angular/material/icon';
   host: {
     '(window:keydown)': 'handleKeyboardShortcuts($event)',
   },
-  templateUrl: './pos.component.html',
-  styleUrls: ['./pos.component.scss'],
+  templateUrl: './pos.html',
+  styleUrls: ['./pos.scss'],
 })
 export class Pos {
   readonly store = inject(PharmacyStore);

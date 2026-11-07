@@ -13,9 +13,9 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-returns',
   imports: [ReactiveFormsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './returns.component.html',
+  templateUrl: './returns.html',
 
-  styleUrls: ['./returns.component.scss'],
+  styleUrls: ['./returns.scss'],
 })
 export class Returns {
   readonly store = inject(PharmacyStore);

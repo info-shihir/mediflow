@@ -30,15 +30,15 @@ export interface DemoAccount {
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-login',
   imports: [ReactiveFormsModule, MatIconModule],
-  templateUrl: './login.component.html',
+  templateUrl: './login.html',
+  styleUrls: ['./login.scss'],
   styles: [
     `
       /* Floating 3D Vector Capsules */
       .capsule-wrap {
         position: absolute;
         will-change: transform;
-  styleUrls: ['./login.component.scss'],
-      }
+        }
 
       .capsule-top-right {
         top: 14%;

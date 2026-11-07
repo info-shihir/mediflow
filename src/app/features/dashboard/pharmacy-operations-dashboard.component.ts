@@ -12,7 +12,7 @@ import {
   PrescriptionItem,
 } from '../../core/models/pharmacy.models';
 import {MatIconModule} from '@angular/material/icon';
-import {StorageZoneHeatmap} from '../inventory/storage-zone-heatmap';
+import {StorageZoneHeatmap} from '../inventory/storage-zone-heatmap.component';
 
 type AlertTab = 'all' | 'lowStock' | 'prescriptions' | 'expiries' | 'heatmap';
 
@@ -20,7 +20,7 @@ type AlertTab = 'all' | 'lowStock' | 'prescriptions' | 'expiries' | 'heatmap';
   selector: 'app-pharmacy-operations-dashboard',
   imports: [RouterLink, MatIconModule, StorageZoneHeatmap],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './pharmacy-operations-dashboard.html',
+  templateUrl: './pharmacy-operations-dashboard.component.html',
 })
 export class PharmacyOperationsDashboard {
   readonly store = inject(PharmacyStore);

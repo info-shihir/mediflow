@@ -13,8 +13,8 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-branches',
   imports: [ReactiveFormsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './branches.component.html',
-  styleUrls: ['./branches.component.scss'],
+  templateUrl: './branches.html',
+  styleUrls: ['./branches.scss'],
 })
 export class Branches {
   readonly store = inject(PharmacyStore);

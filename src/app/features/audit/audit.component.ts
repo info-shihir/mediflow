@@ -13,9 +13,9 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-audit',
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './audit.component.html',
+  templateUrl: './audit.html',
 
-  styleUrls: ['./audit.component.scss'],
+  styleUrls: ['./audit.scss'],
 })
 export class Audit {
   readonly store = inject(PharmacyStore);

@@ -12,8 +12,8 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-copilot',
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './copilot.component.html',
-styleUrls: ['./copilot.component.scss'],
+  templateUrl: './copilot.html',
+styleUrls: ['./copilot.scss'],
 })
 export class Copilot {
   readonly store = inject(PharmacyStore);

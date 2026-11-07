@@ -10,7 +10,7 @@ import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {PharmacyStore} from '../../core/state/pharmacy-store';
 import {BatchItem} from '../../core/models/pharmacy.models';
 import {MatIconModule} from '@angular/material/icon';
-import {StorageZoneHeatmap} from './storage-zone-heatmap';
+import {StorageZoneHeatmap} from './storage-zone-heatmap.component';
 
 type InventoryViewMode = 'fefo' | 'heatmap' | 'ledger';
 type ExpiryUrgencyFilter = 'all' | 'critical' | 'warning' | 'safe';
