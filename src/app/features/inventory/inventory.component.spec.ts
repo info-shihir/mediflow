@@ -1,7 +1,7 @@
 import {TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import {provideHttpClient} from '@angular/common/http';
-import {Inventory} from './inventory';
+import {Inventory} from './inventory.component';
 import {PharmacyStore} from '../../core/state/pharmacy-store';
 import {BatchItem} from '../../core/models/pharmacy.models';
 

@@ -1,7 +1,7 @@
 import {TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import {provideHttpClient} from '@angular/common/http';
-import {PharmacyOperationsDashboard} from './pharmacy-operations-dashboard';
+import {PharmacyOperationsDashboard} from './pharmacy-operations-dashboard.component';
 import {PharmacyStore} from '../../core/state/pharmacy-store';
 import {BatchItem, PrescriptionItem} from '../../core/models/pharmacy.models';
 

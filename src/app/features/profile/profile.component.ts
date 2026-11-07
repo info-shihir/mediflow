@@ -11,7 +11,7 @@ type ProfileTab = 'details' | 'security' | 'permissions' | 'activity';
   selector: 'app-profile',
   imports: [RouterLink, ReactiveFormsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './profile.html',
+  templateUrl: './profile.component.html',
 })
 export class Profile {
   readonly store = inject(PharmacyStore);

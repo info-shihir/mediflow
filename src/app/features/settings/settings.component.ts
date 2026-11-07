@@ -12,9 +12,9 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-settings',
   imports: [ReactiveFormsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './settings.html',
+  templateUrl: './settings.component.html',
 
-  styleUrls: ['./settings.scss'],
+  styleUrls: ['./settings.component.scss'],
 })
 export class Settings {
   readonly store = inject(PharmacyStore);

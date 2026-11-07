@@ -28,9 +28,9 @@ interface SalesRow {
   selector: 'app-dashboard',
   imports: [RouterLink, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './dashboard.html',
+  templateUrl: './dashboard.component.html',
 
-  styleUrls: ['./dashboard.scss'],
+  styleUrls: ['./dashboard.component.scss'],
 })
 export class Dashboard {
   readonly store = inject(PharmacyStore);

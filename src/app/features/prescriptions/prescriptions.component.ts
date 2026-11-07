@@ -14,7 +14,7 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-prescriptions',
   imports: [ReactiveFormsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './prescriptions.html',
+  templateUrl: './prescriptions.component.html',
 })
 export class Prescriptions {
   readonly store = inject(PharmacyStore);

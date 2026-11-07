@@ -1,7 +1,7 @@
 import {TestBed} from '@angular/core/testing';
 import {provideRouter} from '@angular/router';
 import {provideHttpClient} from '@angular/common/http';
-import {StorageZoneHeatmap} from './storage-zone-heatmap';
+import {StorageZoneHeatmap} from './storage-zone-heatmap.component';
 import {PharmacyStore} from '../../core/state/pharmacy-store';
 import {BatchItem} from '../../core/models/pharmacy.models';
 

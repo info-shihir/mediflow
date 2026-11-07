@@ -24,9 +24,9 @@ interface ReorderProposal {
   selector: 'app-reorder',
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './reorder.html',
+  templateUrl: './reorder.component.html',
 
-  styleUrls: ['./reorder.scss'],
+  styleUrls: ['./reorder.component.scss'],
 })
 export class Reorder {
   readonly store = inject(PharmacyStore);

@@ -12,9 +12,9 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-access',
   imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './access.html',
+  templateUrl: './access.component.html',
 
-  styleUrls: ['./access.scss'],
+  styleUrls: ['./access.component.scss'],
 })
 export class Access {
   readonly store = inject(PharmacyStore);

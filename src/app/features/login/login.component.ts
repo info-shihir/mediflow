@@ -30,8 +30,8 @@ export interface DemoAccount {
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-login',
   imports: [ReactiveFormsModule, MatIconModule],
-  templateUrl: './login.html',
-  styleUrls: ['./login.scss'],
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss'],
   styles: [
     `
       /* Floating 3D Vector Capsules */

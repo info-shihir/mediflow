@@ -1,0 +1,629 @@
+<div class="space-y-6">
+  <!-- Heatmap Header & Controls Strip -->
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center">
+          <mat-icon class="text-xl w-5 h-5">grid_view</mat-icon>
+        </div>
+        <div>
+          <h2 class="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-2">
+            <span>Storage Zone Expiry Heatmap</span>
+            <span class="text-xs font-mono px-2 py-0.5 rounded-full font-bold"
+              [class.bg-rose-100]="store.hotZonesCount() > 0"
+              [class.text-rose-800]="store.hotZonesCount() > 0"
+              [class.bg-emerald-100]="store.hotZonesCount() === 0"
+              [class.text-emerald-800]="store.hotZonesCount() === 0"
+            >
+              {{ store.hotZonesCount() }} Hot Zones Identified
+            </span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Physical warehouse density visualization of medication batches nearing expiration date
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Time Horizon Selector -->
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-700">
+        <span class="px-2 text-slate-400 font-bold text-[10px] uppercase">Window:</span>
+        <button
+          type="button"
+          (click)="timeHorizon.set('30')"
+          class="px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold"
+          [class.bg-white]="timeHorizon() === '30'"
+          [class.text-slate-900]="timeHorizon() === '30'"
+          [class.shadow-2xs]="timeHorizon() === '30'"
+          [class.text-slate-600]="timeHorizon() !== '30'"
+        >
+          &le; 30d
+        </button>
+        <button
+          type="button"
+          (click)="timeHorizon.set('60')"
+          class="px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold"
+          [class.bg-white]="timeHorizon() === '60'"
+          [class.text-slate-900]="timeHorizon() === '60'"
+          [class.shadow-2xs]="timeHorizon() === '60'"
+          [class.text-slate-600]="timeHorizon() !== '60'"
+        >
+          &le; 60d
+        </button>
+        <button
+          type="button"
+          (click)="timeHorizon.set('90')"
+          class="px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold"
+          [class.bg-[#0A2623]]="timeHorizon() === '90'"
+          [class.text-white]="timeHorizon() === '90'"
+          [class.shadow-2xs]="timeHorizon() === '90'"
+          [class.text-slate-600]="timeHorizon() !== '90'"
+        >
+          &le; 90d
+        </button>
+        <button
+          type="button"
+          (click)="timeHorizon.set('180')"
+          class="px-2.5 py-1 rounded-lg transition-all cursor-pointer font-bold"
+          [class.bg-white]="timeHorizon() === '180'"
+          [class.text-slate-900]="timeHorizon() === '180'"
+          [class.shadow-2xs]="timeHorizon() === '180'"
+          [class.text-slate-600]="timeHorizon() !== '180'"
+        >
+          &le; 180d
+        </button>
+      </div>
+
+      <!-- Layout Mode Switcher -->
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+        <button
+          type="button"
+          (click)="layoutMode.set('floorplan')"
+          class="px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-bold"
+          [class.bg-white]="layoutMode() === 'floorplan'"
+          [class.text-slate-900]="layoutMode() === 'floorplan'"
+          [class.shadow-2xs]="layoutMode() === 'floorplan'"
+          [class.text-slate-600]="layoutMode() !== 'floorplan'"
+          title="Spatial pharmacy floor plan arrangement"
+        >
+          <mat-icon class="text-xs w-3.5 h-3.5">domain</mat-icon>
+          <span>Floor Plan</span>
+        </button>
+        <button
+          type="button"
+          (click)="layoutMode.set('grid')"
+          class="px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-bold"
+          [class.bg-white]="layoutMode() === 'grid'"
+          [class.text-slate-900]="layoutMode() === 'grid'"
+          [class.shadow-2xs]="layoutMode() === 'grid'"
+          [class.text-slate-600]="layoutMode() !== 'grid'"
+          title="Detailed analytical density cards"
+        >
+          <mat-icon class="text-xs w-3.5 h-3.5">view_module</mat-icon>
+          <span>Grid Cards</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Facility Heatmap KPI Overview Strip -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- 1. Hot Zones Count -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Critical & Elevated Zones</span>
+        <span class="text-base text-rose-500 font-bold">🔥</span>
+      </div>
+      <div class="text-2xl font-black text-rose-600 font-mono tracking-tight">
+        {{ store.hotZonesCount() }} <span class="text-xs font-normal text-slate-500">of 6 zones</span>
+      </div>
+      <div class="text-[11px] text-rose-700 font-medium">
+        Immediate rotation required
+      </div>
+    </div>
+
+    <!-- 2. Peak Density Hotspot -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Peak Expiry Hotspot</span>
+        <span class="text-base text-amber-500 font-bold">⚠</span>
+      </div>
+      <div class="text-2xl font-black text-slate-900 font-mono tracking-tight">
+        {{ store.highestDensityZone().densityPercent }}%
+      </div>
+      <div class="text-[11px] text-amber-800 font-medium truncate">
+        {{ store.highestDensityZone().code }}: {{ store.highestDensityZone().name }}
+      </div>
+    </div>
+
+    <!-- 3. Capital in Hot Zones -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Capital at Risk in Zones</span>
+        <span class="text-base text-teal-700 font-bold">৳</span>
+      </div>
+      <div class="text-2xl font-black text-slate-900 font-mono tracking-tight">
+        ৳ {{ store.totalHotZoneCapital().toFixed(0) }}
+      </div>
+      <div class="text-[11px] text-slate-500">
+        Across flagged storage locations
+      </div>
+    </div>
+
+    <!-- 4. Facility Shelf Stability Ratio -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-1">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Facility Shelf Stability</span>
+        <span class="text-base text-emerald-600 font-bold">✓</span>
+      </div>
+      <div class="text-2xl font-black text-emerald-600 font-mono tracking-tight">
+        {{ facilityStabilityPercent() }}%
+      </div>
+      <div class="text-[11px] text-emerald-700 font-medium">
+        {{ facilitySafeUnits() }} safe units on hand
+      </div>
+    </div>
+  </div>
+
+  <!-- Heatmap Color Scale Legend Bar -->
+  <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-4 text-xs">
+    <div class="flex items-center gap-2 font-bold text-slate-800">
+      <mat-icon class="text-sm w-4 h-4 text-teal-700">palette</mat-icon>
+      <span>Heatmap Density Color Scale:</span>
+    </div>
+
+    <!-- Visual Continuous Ramp -->
+    <div class="flex items-center gap-2 flex-1 max-w-xl">
+      <span class="text-[11px] text-slate-500 font-mono shrink-0">Safe 0%</span>
+      <div class="h-3 flex-1 rounded-full bg-gradient-to-r from-emerald-500 via-yellow-400 via-amber-500 to-rose-600 shadow-inner"></div>
+      <span class="text-[11px] text-rose-700 font-mono font-bold shrink-0">&ge;40% Critical</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-600">
+      <span class="flex items-center gap-1">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span>Safe (&lt;5%)</span>
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        <span>Moderate (5-19%)</span>
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+        <span>Elevated (20-39%)</span>
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></span>
+        <span class="text-rose-900 font-bold">Critical (&ge;40%)</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- MAIN HEATMAP VISUAL DISPLAY -->
+  @if (layoutMode() === 'floorplan') {
+    <!-- FLOOR PLAN SPATIAL LAYOUT -->
+    <div class="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xl space-y-6 relative overflow-hidden">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <h3 class="text-sm sm:text-base font-black tracking-tight text-white uppercase tracking-wider font-mono">
+              Dhanmondi Central Dispensary · Spatial Storage Floor Plan
+            </h3>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Click any storage zone to inspect localized batch lots, expiry countdowns, and initiate FEFO clearance
+          </p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-white/10 text-teal-300 border border-white/10">
+          Live Sensor & Lot Sync
+        </span>
+      </div>
+
+      <!-- Spatial Floor Plan Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @for (zone of store.storageZones(); track zone.id) {
+          <div
+            role="button"
+            tabindex="0"
+            (click)="selectedZone.set(zone)"
+            (keydown.enter)="selectedZone.set(zone)"
+            (keydown.space)="selectedZone.set(zone); $event.preventDefault()"
+            class="rounded-2xl p-5 border transition-all cursor-pointer relative overflow-hidden group flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-teal-400"
+            [class.bg-rose-950/70]="zone.densityLevel === 'critical'"
+            [class.border-rose-500]="zone.densityLevel === 'critical'"
+            [class.shadow-rose-950/50]="zone.densityLevel === 'critical'"
+            [class.hover:border-rose-400]="zone.densityLevel === 'critical'"
+            [class.bg-amber-950/60]="zone.densityLevel === 'elevated'"
+            [class.border-amber-500]="zone.densityLevel === 'elevated'"
+            [class.shadow-amber-950/50]="zone.densityLevel === 'elevated'"
+            [class.hover:border-amber-400]="zone.densityLevel === 'elevated'"
+            [class.bg-slate-800/80]="zone.densityLevel === 'moderate'"
+            [class.border-amber-400/50]="zone.densityLevel === 'moderate'"
+            [class.bg-slate-800/50]="zone.densityLevel === 'safe'"
+            [class.border-emerald-500/40]="zone.densityLevel === 'safe'"
+            [class.hover:border-teal-400]="zone.densityLevel === 'safe'"
+          >
+            <!-- Background Ambient Glow for Hot Zones -->
+            @if (zone.densityLevel === 'critical') {
+              <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-rose-600/30 rounded-full blur-2xl pointer-events-none"></div>
+            } @else if (zone.densityLevel === 'elevated') {
+              <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-amber-500/25 rounded-full blur-2xl pointer-events-none"></div>
+            }
+
+            <div>
+              <!-- Header Row: Zone Code, Icon, Density Badge -->
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
+                    [class.bg-rose-500/30]="zone.densityLevel === 'critical'"
+                    [class.text-rose-300]="zone.densityLevel === 'critical'"
+                    [class.bg-amber-500/30]="zone.densityLevel === 'elevated'"
+                    [class.text-amber-300]="zone.densityLevel === 'elevated'"
+                    [class.bg-teal-500/30]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+                    [class.text-teal-300]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+                  >
+                    <mat-icon class="text-base w-4 h-4">{{ zone.icon }}</mat-icon>
+                  </div>
+                  <div>
+                    <div class="text-xs font-mono font-black tracking-wider uppercase"
+                      [class.text-rose-300]="zone.densityLevel === 'critical'"
+                      [class.text-amber-300]="zone.densityLevel === 'elevated'"
+                      [class.text-teal-300]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+                    >
+                      {{ zone.code }}
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono">
+                      {{ zone.temperature }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Density Heat Tag -->
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-mono font-black"
+                  [class.bg-rose-600]="zone.densityLevel === 'critical'"
+                  [class.text-white]="zone.densityLevel === 'critical'"
+                  [class.animate-pulse]="zone.densityLevel === 'critical'"
+                  [class.bg-amber-500]="zone.densityLevel === 'elevated'"
+                  [class.text-slate-950]="zone.densityLevel === 'elevated'"
+                  [class.bg-amber-400/20]="zone.densityLevel === 'moderate'"
+                  [class.text-amber-300]="zone.densityLevel === 'moderate'"
+                  [class.bg-emerald-500/20]="zone.densityLevel === 'safe'"
+                  [class.text-emerald-300]="zone.densityLevel === 'safe'"
+                >
+                  {{ zone.densityPercent }}% Heat
+                </span>
+              </div>
+
+              <!-- Zone Name & Description -->
+              <h4 class="text-sm font-black text-white group-hover:text-[#D6F599] transition-colors">
+                {{ zone.name }}
+              </h4>
+              <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                {{ zone.shortDescription }}
+              </p>
+
+              <!-- Visual Progress Meter -->
+              <div class="mt-4 space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] font-mono">
+                  <span class="text-slate-400">Near-Expiry Density</span>
+                  <span class="font-bold"
+                    [class.text-rose-400]="zone.densityLevel === 'critical'"
+                    [class.text-amber-400]="zone.densityLevel === 'elevated'"
+                    [class.text-teal-400]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+                  >
+                    {{ zone.nearExpiryUnits }} of {{ zone.totalUnits }} units
+                  </span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-950/80 rounded-full h-2.5 overflow-hidden p-0.5 border border-white/10">
+                  <div
+                    class="h-full rounded-full transition-all duration-700"
+                    [style.width.%]="Math.min(100, Math.max(4, zone.densityPercent))"
+                    [class.bg-gradient-to-r]="true"
+                    [class.from-rose-500]="zone.densityLevel === 'critical'"
+                    [class.to-red-600]="zone.densityLevel === 'critical'"
+                    [class.from-amber-400]="zone.densityLevel === 'elevated'"
+                    [class.to-orange-500]="zone.densityLevel === 'elevated'"
+                    [class.from-amber-400/80]="zone.densityLevel === 'moderate'"
+                    [class.to-yellow-500]="zone.densityLevel === 'moderate'"
+                    [class.from-emerald-400]="zone.densityLevel === 'safe'"
+                    [class.to-teal-500]="zone.densityLevel === 'safe'"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Shelves preview chips -->
+              <div class="flex flex-wrap gap-1 mt-3">
+                @for (sh of zone.shelves; track sh) {
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400">
+                    {{ sh }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Card Footer & Action CTA -->
+            <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+              <div class="font-mono text-[11px]">
+                @if (zone.atRiskCapital > 0) {
+                  <span class="text-rose-400 font-bold">৳ {{ zone.atRiskCapital.toFixed(0) }}</span>
+                  <span class="text-slate-500"> at risk</span>
+                } @else {
+                  <span class="text-emerald-400">All Lots Stable</span>
+                }
+              </div>
+
+              <span class="text-teal-300 font-bold flex items-center gap-0.5 group-hover:translate-x-1 transition-transform text-[11px]">
+                <span>Inspect</span>
+                <mat-icon class="text-xs w-3 h-3">chevron_right</mat-icon>
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <!-- DETAILED ANALYTICAL GRID CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      @for (zone of store.storageZones(); track zone.id) {
+        <div
+          class="bg-white rounded-3xl p-5 border shadow-2xs space-y-4 hover:shadow-md transition-all relative overflow-hidden"
+          [class.border-rose-400]="zone.densityLevel === 'critical'"
+          [class.border-amber-400]="zone.densityLevel === 'elevated'"
+          [class.border-slate-200]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+        >
+          <!-- Top Header Pill -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div
+                class="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-2xs"
+                [class.bg-rose-100]="zone.densityLevel === 'critical'"
+                [class.text-rose-700]="zone.densityLevel === 'critical'"
+                [class.bg-amber-100]="zone.densityLevel === 'elevated'"
+                [class.text-amber-800]="zone.densityLevel === 'elevated'"
+                [class.bg-teal-50]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+                [class.text-teal-700]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+              >
+                <mat-icon class="text-lg w-5 h-5">{{ zone.icon }}</mat-icon>
+              </div>
+              <div>
+                <h3 class="text-sm font-black text-slate-900">{{ zone.name }}</h3>
+                <div class="text-[11px] text-slate-500 font-mono">{{ zone.code }} · {{ zone.temperature }}</div>
+              </div>
+            </div>
+
+            <!-- Density Pill -->
+            <span
+              class="px-2.5 py-1 rounded-full text-[10px] font-mono font-black"
+              [class.bg-rose-600]="zone.densityLevel === 'critical'"
+              [class.text-white]="zone.densityLevel === 'critical'"
+              [class.animate-pulse]="zone.densityLevel === 'critical'"
+              [class.bg-amber-500]="zone.densityLevel === 'elevated'"
+              [class.text-slate-950]="zone.densityLevel === 'elevated'"
+              [class.bg-slate-100]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+              [class.text-slate-700]="zone.densityLevel === 'safe' || zone.densityLevel === 'moderate'"
+            >
+              {{ zone.densityPercent }}% Density
+            </span>
+          </div>
+
+          <!-- Metrics Grid -->
+          <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="text-[10px] uppercase font-bold text-slate-400">Near-Expiry Units</div>
+              <div class="text-base font-black font-mono text-slate-900 mt-0.5">
+                {{ zone.nearExpiryUnits }} <span class="text-xs font-normal text-slate-500">/ {{ zone.totalUnits }}</span>
+              </div>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <div class="text-[10px] uppercase font-bold text-slate-400">At-Risk Value</div>
+              <div class="text-base font-black font-mono text-rose-700 mt-0.5">
+                ৳ {{ zone.atRiskCapital.toFixed(0) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Shelf Inventory Summary -->
+          <div class="space-y-1.5 pt-1">
+            <div class="text-[11px] font-bold text-slate-700 flex items-center justify-between">
+              <span>Assigned Storage Shelves</span>
+              <span class="text-[10px] font-mono text-slate-400">{{ zone.batches.length }} active lots</span>
+            </div>
+            <div class="space-y-1">
+              @for (shelf of zone.shelves; track shelf) {
+                @let shelfBatches = getBatchesForShelf(zone, shelf);
+                <div class="px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                  <span class="font-mono text-slate-700 text-[11px] font-semibold">{{ shelf }}</span>
+                  <div class="flex items-center gap-1.5">
+                    @if (hasNearExpiryOnShelf(shelfBatches)) {
+                      <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                      <span class="text-[10px] font-mono text-rose-700 font-bold">Near Expiry</span>
+                    } @else {
+                      <span class="text-[10px] font-mono text-slate-400">{{ shelfBatches.length }} items</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Action Strip -->
+          <div class="pt-3 border-t border-slate-100 flex items-center gap-2">
+            <button
+              type="button"
+              (click)="selectedZone.set(zone)"
+              class="flex-1 py-2 px-3 bg-[#0A2623] hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <mat-icon class="text-xs w-3.5 h-3.5 text-[#D6F599]">shelves</mat-icon>
+              <span>Inspect Zone Shelves</span>
+            </button>
+
+            @if (zone.nearExpiryUnits > 0) {
+              <button
+                type="button"
+                (click)="applyZoneMarkdown(zone.id, 15)"
+                class="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                title="Apply 15% clearance discount across all near-expiry lots in this zone"
+              >
+                <mat-icon class="text-xs w-3.5 h-3.5">sell</mat-icon>
+                <span>-15%</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ZONE INSPECTION SLIDE-OVER / MODAL -->
+  @if (selectedZone(); as zone) {
+    <div
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6"
+      aria-modal="true"
+      role="dialog"
+    >
+      <!-- Backdrop click dismiss button -->
+      <button
+        type="button"
+        class="fixed inset-0 w-full h-full cursor-default bg-transparent -z-10"
+        (click)="selectedZone.set(null)"
+        aria-label="Dismiss inspector"
+      ></button>
+
+      <div
+        class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden relative z-10"
+      >
+        <!-- Modal Header -->
+        <div class="p-5 bg-[#0A2623] text-white shrink-0 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl text-teal-300">
+              <mat-icon class="text-xl w-5 h-5">{{ zone.icon }}</mat-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-black tracking-tight text-white">{{ zone.name }}</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold"
+                  [class.bg-rose-500]="zone.densityLevel === 'critical'"
+                  [class.bg-amber-500]="zone.densityLevel === 'elevated'"
+                  [class.bg-emerald-500]="zone.densityLevel === 'safe'"
+                  [class.text-white]="true"
+                >
+                  {{ zone.densityPercent }}% Near Expiry
+                </span>
+              </div>
+              <p class="text-xs text-teal-200/80 font-mono mt-0.5">
+                {{ zone.code }} · {{ zone.temperature }} · {{ zone.branch }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="selectedZone.set(null)"
+            class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close inspector"
+          >
+            <mat-icon class="text-sm w-4 h-4">close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Modal Content: Batches & Shelves List -->
+        <div class="p-5 flex-1 overflow-y-auto space-y-4">
+          <div class="flex items-center justify-between text-xs text-slate-500">
+            <span class="font-bold text-slate-800">Medications Assigned to this Storage Zone</span>
+            <span class="font-mono">{{ zone.batches.length }} total lots stored</span>
+          </div>
+
+          <div class="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden">
+            @for (batch of zone.batches; track batch.id) {
+              <div class="p-4 bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xl shrink-0">
+                    {{ batch.emoji || '💊' }}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="text-xs font-black text-slate-900">{{ batch.medicine }}</h4>
+                      <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-100 text-slate-700 font-bold">
+                        {{ batch.shelf }}
+                      </span>
+                      <span class="text-[10px] font-mono text-slate-500">
+                        Lot: {{ batch.batch }}
+                      </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">
+                      {{ batch.generic }} · SKU: {{ batch.sku }}
+                    </div>
+                    <div class="flex items-center gap-2 mt-1 text-[11px] font-mono">
+                      <span class="font-bold text-slate-800">{{ batch.stock }} units</span>
+                      <span class="text-slate-400">·</span>
+                      <span class="text-slate-600">৳{{ batch.price.toFixed(2) }}/unit</span>
+                      <span class="text-slate-400">·</span>
+                      @if (batch.isNearExpiry) {
+                        <span class="text-rose-600 font-bold flex items-center gap-1">
+                          <mat-icon class="text-[11px] w-3 h-3 text-rose-600">timer</mat-icon>
+                          <span>Expires in {{ batch.daysRemaining }}d ({{ batch.expiry }})</span>
+                        </span>
+                      } @else {
+                        <span class="text-emerald-700">Expires: {{ batch.expiry }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Row Actions -->
+                <div class="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                  <button
+                    type="button"
+                    (click)="dispenseInPOS(batch.sku)"
+                    class="px-2.5 py-1.5 bg-[#0A2623] hover:bg-slate-900 text-white font-bold rounded-lg text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Load into POS cart for priority dispensing"
+                  >
+                    <mat-icon class="text-xs w-3.5 h-3.5 text-[#D6F599]">point_of_sale</mat-icon>
+                    <span>Dispense</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    (click)="applyBatchMarkdown(batch.id, 20)"
+                    class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold rounded-lg text-xs transition-colors cursor-pointer"
+                    title="Apply 20% markdown"
+                  >
+                    -20%
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-12 text-center text-slate-400 text-xs">
+                No medication batches are currently mapped to this zone.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 shrink-0 flex items-center justify-between gap-3 text-xs">
+          <span class="text-slate-500 font-mono text-[11px]">
+            Zone Total: {{ zone.totalUnits }} units · At Risk: ৳{{ zone.atRiskCapital.toFixed(2) }}
+          </span>
+
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="selectedZone.set(null)"
+              class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

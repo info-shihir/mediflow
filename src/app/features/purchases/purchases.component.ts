@@ -13,9 +13,9 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-purchases',
   imports: [RouterLink, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './purchases.html',
+  templateUrl: './purchases.component.html',
 
-  styleUrls: ['./purchases.scss'],
+  styleUrls: ['./purchases.component.scss'],
 })
 export class Purchases {
   readonly store = inject(PharmacyStore);

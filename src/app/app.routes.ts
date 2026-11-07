@@ -22,12 +22,12 @@ export const routes: Routes = [
   {
     path: 'inventory',
     loadComponent: () =>
-      import('./features/inventory/inventory').then((m) => m.Inventory),
+      import('./features/inventory/inventory.component').then((m) => m.Inventory),
   },
   {
     path: 'prescriptions',
     loadComponent: () =>
-      import('./features/prescriptions/prescriptions').then(
+      import('./features/prescriptions/prescriptions.component').then(
         (m) => m.Prescriptions,
       ),
   },
@@ -79,7 +79,7 @@ export const routes: Routes = [
   {
     path: 'profile',
     loadComponent: () =>
-      import('./features/profile/profile').then((m) => m.Profile),
+      import('./features/profile/profile.component').then((m) => m.Profile),
   },
   {
     path: '**',
