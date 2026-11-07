@@ -1,0 +1,64 @@
+@if (isLoginPage()) {
+  <router-outlet />
+} @else {
+  <div class="min-h-screen bg-[#EBF7F4] text-slate-900 font-sans selection:bg-[#9DE8D7] selection:text-slate-900">
+    <!-- Sidebar Navigation (Stationary fixed viewport position) -->
+    <app-sidebar [isOpen]="isSidebarOpen()" (closeSidebar)="closeSidebar()" />
+
+    <!-- Mobile Backdrop Overlay -->
+    @if (isSidebarOpen()) {
+      <div
+        (click)="closeSidebar()"
+        class="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs md:hidden"
+        aria-hidden="true"
+      ></div>
+    }
+
+    <!-- Main Content Shell with desktop sidebar offset -->
+    <div class="md:pl-64 flex flex-col min-h-screen min-w-0">
+      <app-topbar (toggleMenu)="toggleSidebar()" />
+
+      <main class="flex-1 p-4 md:p-6 lg:p-8 max-w-[1440px] w-full mx-auto">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+}
+
+<!-- Floating Live Toast Notifications Container -->
+<aside
+  class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"
+  aria-live="polite"
+>
+  @for (toast of store.toasts(); track toast.id) {
+    <div
+      class="pointer-events-auto p-4 rounded-2xl shadow-xl border flex items-start gap-3 animate-in slide-in-from-bottom-2 fade-in duration-200 transition-all bg-[#0A2623] text-white border-teal-900/40"
+    >
+      <mat-icon
+        class="text-lg w-5 h-5 shrink-0 mt-0.5"
+        [class.text-[#9DE8D7]]="toast.type === 'success' || !toast.type"
+        [class.text-[#B4B8FB]]="toast.type === 'info'"
+        [class.text-[#FBA7A7]]="toast.type === 'error'"
+        [class.text-[#FCD385]]="toast.type === 'warn'"
+      >
+        {{
+          toast.type === 'error'
+            ? 'error'
+            : toast.type === 'warn'
+              ? 'warning'
+              : toast.type === 'success'
+                ? 'check_circle'
+                : 'info'
+        }}
+      </mat-icon>
+      <div class="min-w-0 flex-1">
+        <div class="text-xs font-bold">{{ toast.title }}</div>
+        @if (toast.detail) {
+          <div class="text-[11px] text-slate-300 mt-0.5 leading-snug">
+            {{ toast.detail }}
+          </div>
+        }
+      </div>
+    </div>
+  }
+</aside>

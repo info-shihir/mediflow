@@ -1,0 +1,237 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+        Branches & Inter-Branch Stock Transfers
+      </h1>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Coordinate multi-location inventory, reserve lots at dispatch, and record branch receipts.
+      </p>
+    </div>
+    <button
+      type="button"
+      (click)="openTransferModal()"
+      class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+    >
+      <mat-icon class="text-sm w-4 h-4">swap_horiz</mat-icon>
+      <span>Stage New Transfer</span>
+    </button>
+  </div>
+
+  <!-- KPI Metrics -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Active Branches</span>
+        <span class="text-base text-teal-600">⌂</span>
+      </div>
+      <div class="text-2xl font-black text-slate-900 font-mono mt-1">3</div>
+      <div class="text-[11px] text-slate-400">Dhaka Metropolitan Network</div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Pending Transfers</span>
+        <span class="text-base text-amber-500">⇄</span>
+      </div>
+      <div class="text-2xl font-black text-amber-600 font-mono mt-1">
+        {{ pendingTransfersCount() }}
+      </div>
+      <div class="text-[11px] text-slate-400">In transit between depots</div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Branches with Alerts</span>
+        <span class="text-base text-rose-500">⚠</span>
+      </div>
+      <div class="text-2xl font-black text-slate-900 font-mono mt-1">2</div>
+      <div class="text-[11px] text-slate-400">Dhanmondi & Mirpur restock</div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+        <span>Sync Status</span>
+        <span class="text-base text-blue-500">↻</span>
+      </div>
+      <div class="text-base font-bold text-slate-900 mt-2">Connected</div>
+      <div class="text-[11px] text-emerald-600 font-medium">Real-time express sync</div>
+    </div>
+  </div>
+
+  <!-- Branch Stock Overview Table -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden space-y-3">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-bold text-slate-900">Branch Stock Overview</h2>
+        <p class="text-[11px] text-slate-500">Aggregated quantities grouped by branch facility</p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-200">
+            <th class="py-2.5 px-4">Branch Location</th>
+            <th class="py-2.5 px-4">Tracked Batches</th>
+            <th class="py-2.5 px-4">Units On Hand</th>
+            <th class="py-2.5 px-4">Low-Stock Lines</th>
+            <th class="py-2.5 px-4">Branch Supervisor</th>
+            <th class="py-2.5 px-4">Network Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          @for (b of branchSummary(); track b.name) {
+            <tr class="hover:bg-slate-50/70 transition-colors">
+              <td class="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                <span>{{ b.name }}</span>
+              </td>
+              <td class="py-3 px-4 font-mono">{{ b.batchCount }}</td>
+              <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ b.totalStock }} units</td>
+              <td class="py-3 px-4 font-mono font-bold" [class.text-rose-600]="b.lowStockCount > 0">
+                {{ b.lowStockCount }}
+              </td>
+              <td class="py-3 px-4 text-slate-600">{{ b.manager }}</td>
+              <td class="py-3 px-4">
+                <span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Transfer Register Table -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden space-y-3">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-bold text-slate-900">Inter-Branch Transfer Register</h2>
+        <p class="text-[11px] text-slate-500">Source units reserved immediately at dispatch; receiving marks arrival</p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-200">
+            <th class="py-2.5 px-4">Transfer ID</th>
+            <th class="py-2.5 px-4">Medicine & Batch</th>
+            <th class="py-2.5 px-4">Origin (From)</th>
+            <th class="py-2.5 px-4">Destination (To)</th>
+            <th class="py-2.5 px-4">Quantity</th>
+            <th class="py-2.5 px-4">Transfer Status</th>
+            <th class="py-2.5 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          @for (tr of store.transfers(); track tr.id) {
+            <tr class="hover:bg-slate-50/70 transition-colors">
+              <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ tr.id }}</td>
+              <td class="py-3 px-4 font-bold text-slate-800">{{ tr.medicine }}</td>
+              <td class="py-3 px-4 text-slate-600">{{ tr.from }}</td>
+              <td class="py-3 px-4 text-slate-600">{{ tr.to }}</td>
+              <td class="py-3 px-4 font-mono font-bold text-teal-800">{{ tr.qty }} units</td>
+              <td class="py-3 px-4">
+                @if (tr.status === 'Received') {
+                  <span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Received
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center gap-1.5 text-amber-700 font-semibold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> In Transit
+                  </span>
+                }
+              </td>
+              <td class="py-3 px-4 text-right">
+                @if (tr.status !== 'Received') {
+                  <button
+                    type="button"
+                    (click)="store.receiveTransfer(tr.id)"
+                    class="px-2.5 py-1 text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-md transition-colors"
+                  >
+                    Receive Stock
+                  </button>
+                } @else {
+                  <span class="text-slate-400 text-xs">—</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="py-8 text-center text-slate-400">
+                No active stock transfers recorded.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- New Transfer Modal -->
+  @if (showTransferModal()) {
+    <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
+        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <h3 class="font-bold text-slate-900 text-sm">Stage Stock Transfer</h3>
+          <button type="button" (click)="showTransferModal.set(false)" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+        <form [formGroup]="transferForm" (ngSubmit)="submitTransfer()" class="p-5 space-y-3.5 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Select Medicine *</label>
+            <select formControlName="sku" (change)="onSkuChange()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+              @for (sku of availableSkus(); track sku) {
+                <option [value]="sku">{{ getMedNameForSku(sku) }} ({{ sku }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Origin (From) *</label>
+              <select formControlName="from" (change)="onOriginChange()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                <option value="Dhanmondi">Dhanmondi</option>
+                <option value="Uttara">Uttara</option>
+                <option value="Mirpur">Mirpur</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Destination (To) *</label>
+              <select formControlName="to" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                <option value="Uttara">Uttara</option>
+                <option value="Mirpur">Mirpur</option>
+                <option value="Dhanmondi">Dhanmondi</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Batch Number *</label>
+              <input formControlName="batch" placeholder="e.g. NP2608" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Transfer Quantity (Units) *</label>
+              <input type="number" formControlName="qty" min="1" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Transfer Notes / Reason</label>
+            <textarea formControlName="notes" placeholder="e.g. Rebalancing emergency stock for seasonal influenza demand" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs min-h-[50px]"></textarea>
+          </div>
+
+          <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+            <button type="button" (click)="showTransferModal.set(false)" class="px-3 py-1.5 text-slate-600 font-semibold">Cancel</button>
+            <button type="submit" [disabled]="transferForm.invalid" class="px-4 py-1.5 bg-teal-600 text-white font-bold rounded-lg disabled:opacity-50">Stage Transfer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

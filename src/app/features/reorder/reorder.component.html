@@ -1,0 +1,245 @@
+<div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+            Smart Reordering & Procurement
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Automated purchase order suggestions combining on-hand stock levels, reorder points, and lead times.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="exportReorderCSV()"
+            class="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+          >
+            <mat-icon class="text-sm w-4 h-4 text-slate-500">file_download</mat-icon>
+            <span>Export Suggestions</span>
+          </button>
+          <button
+            type="button"
+            (click)="createSelectedPOs()"
+            class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+          >
+            <mat-icon class="text-sm w-4 h-4">add_shopping_cart</mat-icon>
+            <span>Create Selected PO</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Metrics -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+            <span>Suggested Items</span>
+            <span class="text-base text-teal-600">↗</span>
+          </div>
+          <div class="text-2xl font-black text-slate-900 font-mono mt-1">
+            {{ selectedCount() }}
+          </div>
+          <div class="text-[11px] text-slate-400">Items tagged for restock</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+            <span>Estimated Order Value</span>
+            <span class="text-base text-teal-600 font-bold">৳</span>
+          </div>
+          <div class="text-2xl font-black text-teal-700 font-mono mt-1">
+            ৳ {{ estimatedOrderValue().toLocaleString('en-BD') }}
+          </div>
+          <div class="text-[11px] text-slate-400">Sample wholesale cost</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+            <span>Open Purchase Orders</span>
+            <span class="text-base text-amber-500">▤</span>
+          </div>
+          <div class="text-2xl font-black text-slate-900 font-mono mt-1">
+            {{ openPOCount() }}
+          </div>
+          <div class="text-[11px] text-slate-400">Draft & submitted orders</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-semibold">
+            <span>Supplier Lead Time</span>
+            <span class="text-base text-purple-500">◷</span>
+          </div>
+          <div class="text-2xl font-black text-slate-900 font-mono mt-1">
+            2–5 Days
+          </div>
+          <div class="text-[11px] text-slate-400">Estimated delivery window</div>
+        </div>
+      </div>
+
+      <!-- Suggested Replenishment Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden space-y-3">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Recommended Replenishment Schedule</h2>
+            <p class="text-[11px] text-slate-500">Edit proposed quantities before staging draft orders</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600">Branch:</span>
+            <select
+              [value]="selectedBranch()"
+              (change)="selectedBranch.set($any($event.target).value)"
+              class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium cursor-pointer"
+            >
+              <option value="Dhanmondi">Dhanmondi</option>
+              <option value="Uttara">Uttara</option>
+              <option value="Mirpur">Mirpur</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                <th class="py-2.5 px-4">Medicine & SKU</th>
+                <th class="py-2.5 px-4">Current Stock</th>
+                <th class="py-2.5 px-4">Reorder Point</th>
+                <th class="py-2.5 px-4">Suggested Qty</th>
+                <th class="py-2.5 px-4">Supplier</th>
+                <th class="py-2.5 px-4">Est. Unit Cost</th>
+                <th class="py-2.5 px-4">Line Total</th>
+                <th class="py-2.5 px-4 text-center">Include</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              @for (item of proposalList(); track item.sku) {
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                  <td class="py-3 px-4">
+                    <div class="font-bold text-slate-900">{{ item.medicine }}</div>
+                    <div class="text-[10px] text-slate-500 font-mono">{{ item.sku }}</div>
+                  </td>
+                  <td class="py-3 px-4 font-mono font-bold" [class.text-rose-600]="item.currentStock <= item.reorderPoint">
+                    {{ item.currentStock }}
+                  </td>
+                  <td class="py-3 px-4 font-mono text-slate-500">{{ item.reorderPoint }}</td>
+                  <td class="py-3 px-4">
+                    <input
+                      type="number"
+                      min="0"
+                      [value]="item.suggestedQty"
+                      (input)="updateQty(item.sku, +$any($event.target).value)"
+                      class="w-20 p-1 bg-slate-50 border border-slate-200 rounded text-xs font-mono font-bold text-slate-900"
+                    />
+                  </td>
+                  <td class="py-3 px-4 text-slate-600">{{ item.supplier }}</td>
+                  <td class="py-3 px-4 font-mono">৳ {{ item.unitCost.toFixed(2) }}</td>
+                  <td class="py-3 px-4 font-mono font-bold text-teal-800">
+                    ৳ {{ (item.suggestedQty * item.unitCost).toFixed(2) }}
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <input
+                      type="checkbox"
+                      [checked]="item.included"
+                      (change)="toggleInclude(item.sku, $any($event.target).checked)"
+                      class="w-4 h-4 text-teal-600 rounded border-slate-300 cursor-pointer"
+                    />
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="py-12 text-center text-slate-400">
+                    No immediate reorder proposals for this branch. Stock levels healthy.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/30">
+          <span>{{ selectedCount() }} item(s) selected for procurement</span>
+          <button
+            type="button"
+            (click)="createSelectedPOs()"
+            class="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs"
+          >
+            Create Selected PO →
+          </button>
+        </div>
+      </div>
+
+      <!-- Purchase Orders Register -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden space-y-3">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Purchase Orders Register</h2>
+            <p class="text-[11px] text-slate-500">Track draft, submitted, and received supplier orders</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-200">
+                <th class="py-2.5 px-4">PO Number</th>
+                <th class="py-2.5 px-4">Supplier</th>
+                <th class="py-2.5 px-4">Destination Branch</th>
+                <th class="py-2.5 px-4">Total Units</th>
+                <th class="py-2.5 px-4">Estimated Total</th>
+                <th class="py-2.5 px-4">Status</th>
+                <th class="py-2.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              @for (po of store.purchaseOrders(); track po.id) {
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ po.id }}</td>
+                  <td class="py-3 px-4 font-semibold text-slate-800">{{ po.supplier }}</td>
+                  <td class="py-3 px-4">{{ po.branch }}</td>
+                  <td class="py-3 px-4 font-mono">{{ po.items }}</td>
+                  <td class="py-3 px-4 font-mono font-bold text-teal-800">
+                    ৳ {{ po.total.toFixed(2) }}
+                  </td>
+                  <td class="py-3 px-4">
+                    @if (po.status === 'Received') {
+                      <span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Received
+                      </span>
+                    } @else if (po.status === 'Draft') {
+                      <span class="inline-flex items-center gap-1.5 text-amber-700 font-semibold text-[11px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 text-blue-700 font-semibold text-[11px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Submitted
+                      </span>
+                    }
+                  </td>
+                  <td class="py-3 px-4 text-right">
+                    @if (po.status !== 'Received') {
+                      <button
+                        type="button"
+                        (click)="store.receivePurchaseOrder(po.id)"
+                        class="px-2.5 py-1 text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-md transition-colors"
+                      >
+                        Mark Received
+                      </button>
+                    } @else {
+                      <span class="text-slate-400 text-xs">—</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="py-8 text-center text-slate-400">
+                    No purchase orders recorded yet.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  

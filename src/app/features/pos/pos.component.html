@@ -1,0 +1,527 @@
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <span>Smart Point of Sale</span>
+            <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-teal-100 text-teal-800">
+              Register #1 · Open
+            </span>
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            High-speed checkout with automatic FEFO batch allocation and instant receipting.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="store.clearCart()"
+            class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs transition-colors flex items-center gap-1.5"
+          >
+            <mat-icon class="text-sm w-4 h-4 text-slate-500">remove_shopping_cart</mat-icon>
+            <span>Clear Cart</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Instruction Notice -->
+      <div class="p-3 bg-teal-50/80 border border-teal-200/60 rounded-xl text-teal-900 text-xs flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-base text-teal-700 w-4 h-4">keyboard</mat-icon>
+          <span>
+            <strong>Barcode Ready:</strong> Press <kbd class="px-1.5 py-0.5 bg-white border border-teal-300 rounded text-[10px] font-mono font-bold">F2</kbd> to focus barcode scanner or enter SKU (e.g. <code>8901001</code>) and press <kbd class="px-1.5 py-0.5 bg-white border border-teal-300 rounded text-[10px] font-mono font-bold">Enter</kbd>.
+          </span>
+        </div>
+        <span class="text-[11px] font-semibold text-teal-800 hidden md:inline">
+          Earliest expiry batch automatically reserved
+        </span>
+      </div>
+
+      <!-- FEFO Expiry Notification & Priority Dispensing Banner -->
+      @if (!dismissedBanner() && store.fefoNotifications().length > 0) {
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-teal-500/10 border border-amber-300/80 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <mat-icon class="text-xl w-5 h-5">priority_high</mat-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-xs sm:text-sm font-black text-slate-900 tracking-tight">
+                  FEFO Priority Dispensing Mandate Active
+                </h2>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-amber-200 text-amber-950">
+                  {{ store.fefoNotifications().length }} batches nearing expiry
+                </span>
+                @if (store.criticalFefoCount() > 0) {
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white animate-pulse">
+                    {{ store.criticalFefoCount() }} critical (&le;30d)
+                  </span>
+                }
+              </div>
+              <p class="text-xs text-slate-600 mt-0.5">
+                Dispense nearest-expiry medication batches first to protect ৳{{ store.fefoAtRiskTotal().toFixed(0) }} in inventory capital.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 self-stretch sm:self-auto shrink-0 flex-wrap">
+            @if (topFefoItem(); as top) {
+              <button
+                type="button"
+                (click)="dispenseTopFefo()"
+                class="px-3 py-1.5 bg-[#0A2623] hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                title="Quick-load the #1 earliest expiring batch into this cart"
+              >
+                <mat-icon class="text-xs w-3.5 h-3.5 text-[#D6F599]">flash_on</mat-icon>
+                <span>Dispense #1: {{ top.medicine }} (Exp in {{ top.daysRemaining }}d)</span>
+              </button>
+            }
+
+            <button
+              type="button"
+              (click)="fefoOnlyFilter.set(!fefoOnlyFilter())"
+              class="px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer border"
+              [class.bg-amber-600]="fefoOnlyFilter()"
+              [class.text-white]="fefoOnlyFilter()"
+              [class.bg-white]="!fefoOnlyFilter()"
+              [class.text-amber-900]="!fefoOnlyFilter()"
+              [class.border-amber-300]="!fefoOnlyFilter()"
+            >
+              <span>{{ fefoOnlyFilter() ? 'Show All Products' : 'Filter Near-Expiry' }}</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="dismissedBanner.set(true)"
+              class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              aria-label="Dismiss banner"
+              title="Dismiss notification"
+            >
+              <mat-icon class="text-sm w-4 h-4">close</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Main POS Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Products Column (Left 7 cols) -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <!-- Barcode scanner input -->
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <mat-icon class="absolute left-3 top-2.5 text-slate-400 text-lg w-5 h-5 pointer-events-none">
+                qr_code_scanner
+              </mat-icon>
+              <input
+                #barcodeInput
+                type="text"
+                placeholder="Scan barcode or type SKU (e.g. 8901001, 8901002)..."
+                (keydown.enter)="onBarcodeScan(barcodeInput.value); barcodeInput.value = ''"
+                class="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="onBarcodeScan(barcodeInput.value); barcodeInput.value = ''"
+              class="px-4 py-2 bg-[#0A2623] hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors shrink-0 shadow-xs cursor-pointer"
+            >
+              <span>Scan / Add ↵</span>
+            </button>
+          </div>
+
+          <!-- Product Filters -->
+          <div class="flex flex-col sm:flex-row gap-2 pt-1">
+            <div class="relative flex-1">
+              <mat-icon class="absolute left-3 top-2 text-slate-400 text-base w-4 h-4 pointer-events-none">
+                search
+              </mat-icon>
+              <input
+                type="text"
+                placeholder="Search catalog by name or generic..."
+                [value]="posSearch()"
+                (input)="posSearch.set($any($event.target).value)"
+                class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+            <select
+              [value]="posCategory()"
+              (change)="posCategory.set($any($event.target).value)"
+              class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Categories</option>
+              <option value="Analgesic">Analgesic</option>
+              <option value="Antibiotic">Antibiotic</option>
+              <option value="Vitamin">Vitamin</option>
+              <option value="Gastrointestinal">Gastrointestinal</option>
+              <option value="Rehydration">Rehydration</option>
+            </select>
+            <button
+              type="button"
+              (click)="fefoOnlyFilter.set(!fefoOnlyFilter())"
+              class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap border"
+              [class.bg-amber-600]="fefoOnlyFilter()"
+              [class.border-amber-700]="fefoOnlyFilter()"
+              [class.text-white]="fefoOnlyFilter()"
+              [class.bg-amber-50]="!fefoOnlyFilter()"
+              [class.border-amber-300]="!fefoOnlyFilter()"
+              [class.text-amber-900]="!fefoOnlyFilter()"
+              title="Show only products that have batches nearing expiry"
+            >
+              <mat-icon class="text-xs w-3.5 h-3.5">priority_high</mat-icon>
+              <span>FEFO Priority ({{ nearExpiryProductCount() }})</span>
+            </button>
+          </div>
+
+          <!-- Product Cards Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto pr-1">
+            @for (product of filteredProducts(); track product.sku) {
+              @let fefoAlert = getNearExpiryForSku(product.sku);
+              <button
+                type="button"
+                (click)="store.addToCart(product.sku)"
+                class="p-3 text-left bg-white border rounded-xl flex flex-col justify-between transition-all hover:-translate-y-0.5 shadow-2xs group cursor-pointer relative"
+                [class.border-amber-300]="fefoAlert"
+                [class.bg-amber-50/25]="fefoAlert"
+                [class.hover:border-amber-500]="fefoAlert"
+                [class.border-slate-200]="!fefoAlert"
+                [class.hover:border-teal-500/80]="!fefoAlert"
+              >
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="h-10 w-10 rounded-lg bg-teal-50/70 flex items-center justify-center text-xl group-hover:bg-teal-100 transition-colors">
+                      {{ product.emoji }}
+                    </div>
+                    @if (fefoAlert) {
+                      <span
+                        class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase font-mono tracking-wider flex items-center gap-1"
+                        [class.bg-rose-100]="fefoAlert.urgency === 'critical'"
+                        [class.text-rose-800]="fefoAlert.urgency === 'critical'"
+                        [class.bg-amber-100]="fefoAlert.urgency !== 'critical'"
+                        [class.text-amber-900]="fefoAlert.urgency !== 'critical'"
+                        [title]="'FEFO Priority rank #' + fefoAlert.fefoRank + ' - Expires in ' + fefoAlert.daysRemaining + ' days'"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full" [class.bg-rose-600]="fefoAlert.urgency === 'critical'" [class.animate-pulse]="fefoAlert.urgency === 'critical'" [class.bg-amber-600]="fefoAlert.urgency !== 'critical'"></span>
+                        <span>FEFO #{{ fefoAlert.fefoRank }}</span>
+                      </span>
+                    }
+                  </div>
+                  <div class="text-xs font-bold text-slate-900 group-hover:text-teal-700 line-clamp-1">
+                    {{ product.medicine }}
+                  </div>
+                  <div class="text-[10px] text-slate-500 truncate">
+                    {{ product.generic }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 font-mono">
+                    {{ getStockForSku(product.sku) }} units on hand
+                  </div>
+
+                  @if (fefoAlert) {
+                    <div class="mt-2 px-1.5 py-0.5 rounded bg-amber-100/80 border border-amber-200 text-amber-900 text-[9px] font-bold font-mono flex items-center gap-1">
+                      <mat-icon class="text-[10px] w-3 h-3 text-amber-700">timer</mat-icon>
+                      <span class="truncate">Lot {{ fefoAlert.batch }} · Exp {{ fefoAlert.daysRemaining }}d</span>
+                    </div>
+                  }
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <span class="text-xs font-black font-mono text-teal-700">
+                    ৳ {{ product.price.toFixed(2) }}
+                  </span>
+                  <span class="text-[10px] font-bold text-teal-600 group-hover:text-teal-700">
+                    ＋ Add
+                  </span>
+                </div>
+              </button>
+            } @empty {
+              <div class="col-span-full py-12 text-center text-slate-400 text-xs">
+                No medicines match your search criteria.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Current Sale & Cart (Right 5 cols) -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span>Current Sale</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded font-bold bg-blue-100 text-blue-800">
+                  {{ store.cartCount() }} units
+                </span>
+              </h2>
+              <p class="text-[11px] text-slate-400 font-mono">Invoice #SL-1087</p>
+            </div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded">
+              FEFO Managed
+            </span>
+          </div>
+
+          <!-- Customer & Payment selects -->
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Customer</label>
+              <select
+                #customerSelect
+                class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none"
+              >
+                <option value="Walk-in customer">Walk-in Customer</option>
+                <option value="Farhana Rahman">Farhana Rahman</option>
+                <option value="Imran Hossain">Imran Hossain</option>
+                <option value="Nusrat Jahan">Nusrat Jahan</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Payment Method</label>
+              <select
+                #paymentSelect
+                class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none"
+              >
+                <option value="Cash">Cash</option>
+                <option value="Card (simulated)">Card (simulated)</option>
+                <option value="Mobile banking">Mobile Banking</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Cart Line Items List -->
+          <div class="divide-y divide-slate-100 max-h-56 overflow-y-auto pr-1">
+            @for (item of store.cart(); track item.sku) {
+              <div class="py-2.5 flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="text-xs font-bold text-slate-900 truncate">{{ item.name }}</div>
+                  <div class="text-[10px] text-slate-500 font-mono">
+                    ৳ {{ item.price.toFixed(2) }} each
+                  </div>
+                  <!-- FEFO batch chips -->
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    @for (a of item.alloc; track a.batchId) {
+                      @let nearExp = isBatchNearExpiry(a.batchId);
+                      <span
+                        class="text-[9px] font-mono px-1.5 py-0.5 rounded flex items-center gap-1"
+                        [class.bg-amber-100]="nearExp"
+                        [class.text-amber-900]="nearExp"
+                        [class.border]="nearExp"
+                        [class.border-amber-300]="nearExp"
+                        [class.font-bold]="nearExp"
+                        [class.bg-slate-100]="!nearExp"
+                        [class.text-slate-600]="!nearExp"
+                      >
+                        @if (nearExp) {
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                          <span>FEFO Priority Batch {{ a.batch }} (×{{ a.qty }})</span>
+                        } @else {
+                          <span>Batch {{ a.batch }} (×{{ a.qty }})</span>
+                        }
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <div class="text-right shrink-0">
+                  <div class="text-xs font-bold font-mono text-slate-900">
+                    ৳ {{ (item.price * item.qty).toFixed(2) }}
+                  </div>
+                  <!-- Quantity controls -->
+                  <div class="flex items-center gap-1 mt-1.5">
+                    <button
+                      type="button"
+                      (click)="store.updateCartQty(item.sku, -1)"
+                      class="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 transition-colors"
+                    >
+                      −
+                    </button>
+                    <span class="w-6 text-center text-xs font-mono font-bold">{{ item.qty }}</span>
+                    <button
+                      type="button"
+                      (click)="store.updateCartQty(item.sku, 1)"
+                      class="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 transition-colors"
+                    >
+                      ＋
+                    </button>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-12 text-center text-slate-400">
+                <mat-icon class="text-3xl text-slate-300 mx-auto block mb-1">shopping_basket</mat-icon>
+                <div class="text-xs font-semibold text-slate-600">Cart is empty</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  Scan a barcode or choose from the catalog.
+                </p>
+              </div>
+            }
+          </div>
+
+          <!-- Totals Calculation -->
+          <div class="pt-3 border-t border-slate-200 space-y-2 text-xs">
+            <div class="flex justify-between text-slate-600">
+              <span>Subtotal</span>
+              <span class="font-mono font-bold">৳ {{ store.cartSubtotal().toFixed(2) }}</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-600">
+              <span>Discount (৳)</span>
+              <input
+                type="number"
+                min="0"
+                [value]="store.discount()"
+                (input)="onDiscountInput($event)"
+                class="w-20 px-2 py-1 text-right bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-900 focus:outline-none"
+              />
+            </div>
+            <div class="flex justify-between items-center text-base font-black text-slate-900 pt-2 border-t border-dashed border-slate-200">
+              <span>Total Due</span>
+              <span class="font-mono text-teal-700">৳ {{ store.cartTotal().toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- Checkout CTA Buttons -->
+          <div class="space-y-2 pt-2">
+            <button
+              type="button"
+              [disabled]="store.cart().length === 0"
+              (click)="store.completeCheckout(customerSelect.value, paymentSelect.value)"
+              class="w-full py-3 bg-[#0A2623] hover:bg-slate-900 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
+            >
+              <mat-icon class="text-base w-4 h-4">task_alt</mat-icon>
+              <span>Complete Sale · ৳ {{ store.cartTotal().toFixed(2) }}</span>
+            </button>
+
+            @if (store.lastReceipt()) {
+              <button
+                type="button"
+                (click)="showReceiptModal.set(true)"
+                class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <mat-icon class="text-sm w-4 h-4 text-slate-500">receipt</mat-icon>
+                <span>View / Print Receipt ({{ store.lastReceipt()?.id }})</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Receipt Modal Preview -->
+      @if (showReceiptModal() && store.lastReceipt(); as receipt) {
+        <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-teal-600 text-lg w-5 h-5">receipt</mat-icon>
+                <h3 class="font-bold text-slate-900 text-sm">Receipt Preview</h3>
+              </div>
+              <button
+                type="button"
+                (click)="showReceiptModal.set(false)"
+                class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- Printable Receipt Sheet -->
+            <div id="printable-receipt" class="p-6 font-mono text-xs space-y-4 text-slate-800">
+              <div class="text-center space-y-1">
+                <div class="text-base font-black tracking-tight text-slate-900">
+                  {{ store.settings().name }}
+                </div>
+                <div class="text-[11px] text-slate-500">{{ store.settings().address }}</div>
+                <div class="text-[11px] text-slate-500">Phone: {{ store.settings().phone }}</div>
+                <div class="text-[10px] text-slate-400 uppercase tracking-widest pt-1 border-b border-dashed border-slate-300 pb-2">
+                  Official Thermal POS Receipt
+                </div>
+              </div>
+
+              <div class="text-[11px] space-y-0.5 text-slate-600">
+                <div class="flex justify-between">
+                  <span>Invoice:</span>
+                  <span class="font-bold text-slate-900">{{ receipt.id }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Date/Time:</span>
+                  <span>{{ receipt.date }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Customer:</span>
+                  <span>{{ receipt.customer }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Payment:</span>
+                  <span>{{ receipt.payment }}</span>
+                </div>
+              </div>
+
+              <!-- Line Items -->
+              <table class="w-full text-left border-t border-b border-dashed border-slate-300 my-2">
+                <thead>
+                  <tr class="text-[10px] text-slate-500 uppercase">
+                    <th class="py-1">Item</th>
+                    <th class="py-1 text-center">Qty</th>
+                    <th class="py-1 text-right">Price</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-dotted divide-slate-200">
+                  @for (item of receipt.items; track item.sku) {
+                    <tr>
+                      <td class="py-1.5 pr-2">
+                        <div class="font-bold text-slate-900">{{ item.name }}</div>
+                        <div class="text-[9px] text-slate-500">
+                          @for (a of item.alloc; track a.batchId) {
+                            <span>{{ a.batch }}(×{{ a.qty }}) </span>
+                          }
+                        </div>
+                      </td>
+                      <td class="py-1.5 text-center">{{ item.qty }}</td>
+                      <td class="py-1.5 text-right font-bold">
+                        ৳ {{ (item.price * item.qty).toFixed(2) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+
+              <!-- Totals -->
+              <div class="space-y-1 text-right text-xs">
+                <div class="flex justify-between text-slate-600">
+                  <span>Subtotal:</span>
+                  <span>৳ {{ receipt.subtotal.toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                  <span>Discount:</span>
+                  <span>- ৳ {{ receipt.discount.toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm font-black text-slate-900 pt-1 border-t border-slate-300">
+                  <span>Total Paid:</span>
+                  <span class="text-teal-700">৳ {{ receipt.total.toFixed(2) }}</span>
+                </div>
+              </div>
+
+              <div class="text-center text-[10px] text-slate-400 pt-3 border-t border-dashed border-slate-200">
+                Thank you for visiting {{ store.settings().name }}!
+                <br />Items dispensed under FEFO safety protocol.
+              </div>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="px-5 py-3 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
+              <button
+                type="button"
+                (click)="showReceiptModal.set(false)"
+                class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-200 rounded-lg font-semibold"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                (click)="printReceipt()"
+                class="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5"
+              >
+                <mat-icon class="text-sm w-4 h-4">print</mat-icon>
+                <span>Print Receipt</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>

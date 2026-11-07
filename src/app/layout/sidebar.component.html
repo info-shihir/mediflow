@@ -1,0 +1,287 @@
+<aside
+      class="w-64 bg-[#EBF7F4] text-slate-700 p-4 flex flex-col fixed inset-y-0 left-0 h-screen overflow-hidden z-40 transition-transform duration-200 select-none border-r border-slate-200/50"
+      [class.-translate-x-full]="!isOpen()"
+      [class.translate-x-0]="isOpen()"
+      [class.md:translate-x-0]="true"
+    >
+      <!-- Original Brand Lockup with New Crisp Styling -->
+      <div class="flex items-center gap-2.5 px-2 py-3 mb-2 shrink-0">
+        <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-xs">
+          ✚
+        </div>
+        <div>
+          <div class="text-base font-black tracking-tight text-slate-900 leading-tight">
+            MediFlow
+          </div>
+          <div class="text-[9px] font-bold tracking-widest text-teal-800 uppercase leading-none">
+            ENTERPRISE PHARMACY
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrollable Navigation and Quick Action Container -->
+      <div class="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pr-0.5 space-y-3">
+        <!-- OPERATIONS SECTION -->
+        <div>
+          <div class="px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Operations
+          </div>
+          <nav class="flex flex-col gap-1">
+            @if (store.canAccessPage('dashboard')) {
+              <a
+                routerLink="/dashboard"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">dashboard</mat-icon>
+                <span>Overview</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('pos')) {
+              <a
+                routerLink="/pos"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <mat-icon class="text-lg leading-none w-4 h-4">point_of_sale</mat-icon>
+                  <span>Smart POS</span>
+                </div>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#D6F599] text-slate-900">
+                  F2
+                </span>
+              </a>
+            }
+
+            @if (store.canAccessPage('inventory')) {
+              <a
+                routerLink="/inventory"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">inventory_2</mat-icon>
+                <span>Batch inventory</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('prescriptions')) {
+              <a
+                routerLink="/prescriptions"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <mat-icon class="text-lg leading-none w-4 h-4">local_pharmacy</mat-icon>
+                  <span>Prescription safety</span>
+                </div>
+                @if (store.pendingRxCount() > 0) {
+                  <span class="px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#FBA7A7] text-slate-950">
+                    {{ store.pendingRxCount() }}
+                  </span>
+                }
+              </a>
+            }
+
+            @if (store.canAccessPage('purchases')) {
+              <a
+                routerLink="/purchases"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">document_scanner</mat-icon>
+                <span>Purchasing & OCR</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('reorder')) {
+              <a
+                routerLink="/reorder"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <mat-icon class="text-lg leading-none w-4 h-4">autorenew</mat-icon>
+                  <span>Smart reordering</span>
+                </div>
+                @if (store.lowStockBatches().length > 0) {
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#FCD385] text-slate-900">
+                    {{ store.lowStockBatches().length }}
+                  </span>
+                }
+              </a>
+            }
+
+            @if (store.canAccessPage('returns')) {
+              <a
+                routerLink="/returns"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">assignment_return</mat-icon>
+                <span>Returns & refunds</span>
+              </a>
+            }
+          </nav>
+        </div>
+
+        <!-- INTELLIGENCE & CONTROL SECTION -->
+        <div>
+          <div class="px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Intelligence & control
+          </div>
+          <nav class="flex flex-col gap-1">
+            @if (store.canAccessPage('copilot')) {
+              <a
+                routerLink="/copilot"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <mat-icon class="text-lg leading-none w-4 h-4 text-emerald-700">auto_awesome</mat-icon>
+                  <span>AI Pharmacy Copilot</span>
+                </div>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#B4B8FB] text-slate-900">
+                  AI
+                </span>
+              </a>
+            }
+
+            @if (store.canAccessPage('branches')) {
+              <a
+                routerLink="/branches"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">storefront</mat-icon>
+                <span>Branches & transfers</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('audit')) {
+              <a
+                routerLink="/audit"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">history</mat-icon>
+                <span>Audit history</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('access')) {
+              <a
+                routerLink="/access"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">verified_user</mat-icon>
+                <span>Roles & permissions</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('reports')) {
+              <a
+                routerLink="/reports"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">assessment</mat-icon>
+                <span>Reports & analytics</span>
+              </a>
+            }
+
+            @if (store.canAccessPage('settings')) {
+              <a
+                routerLink="/settings"
+                routerLinkActive="!bg-[#0A2623] !text-white font-semibold shadow-xs"
+                (click)="onNavigate()"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-colors"
+              >
+                <mat-icon class="text-lg leading-none w-4 h-4">settings</mat-icon>
+                <span>Settings</span>
+              </a>
+            }
+          </nav>
+        </div>
+      </div>
+
+      <!-- User Section (Lower Section of Side Nav Bar) -->
+      <div class="shrink-0 pt-3 mt-2 border-t border-slate-200/70">
+        <div class="p-2.5 rounded-2xl bg-white/80 border border-slate-200/80 shadow-2xs hover:bg-white transition-all">
+          <div class="flex items-center gap-2.5">
+            <!-- User Avatar & Info (Links to User Profile) -->
+            <a
+              routerLink="/profile"
+              (click)="onNavigate()"
+              class="flex items-center gap-2.5 min-w-0 flex-1 group cursor-pointer"
+              title="View Staff Profile"
+            >
+              <!-- User Avatar with Status Indicator -->
+              <div class="relative shrink-0">
+                <div
+                  class="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-200 to-amber-400 text-amber-950 font-black text-xs flex items-center justify-center border border-amber-300 shadow-2xs group-hover:scale-105 transition-transform"
+                >
+                  <span>{{ store.roleConfig().initials || '👤' }}</span>
+                </div>
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+              </div>
+
+              <!-- User Info: Name & Email -->
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-teal-900 truncate leading-tight flex items-center gap-1">
+                  <span>{{ store.roleConfig().name }}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
+                  {{ userEmail() }}
+                </div>
+              </div>
+            </a>
+
+            <!-- Logout / Switch Station Button -->
+            <a
+              routerLink="/login"
+              (click)="onNavigate()"
+              class="w-7 h-7 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-700 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
+              title="Sign Out / Switch Station"
+              aria-label="Sign out"
+            >
+              <mat-icon class="text-base w-4 h-4">logout</mat-icon>
+            </a>
+          </div>
+
+          <!-- Role Selector Strip -->
+          <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Role</span>
+            <div class="relative flex items-center min-w-0 flex-1 justify-end">
+              <select
+                [value]="store.currentRole()"
+                (change)="onRoleChange($event)"
+                class="appearance-none bg-teal-50 hover:bg-teal-100/70 border border-teal-200/80 text-teal-900 font-semibold text-[11px] rounded-lg px-2 py-0.5 pr-5 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer max-w-full truncate"
+                title="Switch Active Role"
+              >
+                <option value="Admin">Administrator</option>
+                <option value="Pharmacist">Pharmacist</option>
+                <option value="Cashier">Cashier</option>
+                <option value="Inventory">Inventory Manager</option>
+                <option value="BranchManager">Branch Manager</option>
+              </select>
+              <mat-icon class="absolute right-1 text-xs w-3 h-3 text-teal-700 pointer-events-none">expand_more</mat-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  

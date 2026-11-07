@@ -1,0 +1,512 @@
+<div class="space-y-6 max-w-5xl mx-auto">
+  <!-- Profile Hero Header Banner -->
+  <div class="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden relative">
+    <!-- Top decorative banner with pastel medical gradient -->
+    <div class="h-32 bg-gradient-to-r from-[#0A2623] via-[#124A42] to-[#1E6B5F] relative px-6 flex items-end">
+      <div class="absolute inset-0 bg-[radial-gradient(#9DE8D7_1px,transparent_1px)] [background-size:16px_16px] opacity-10"></div>
+      <div class="absolute top-4 right-4 flex items-center gap-2">
+        <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-white/15 text-white backdrop-blur-xs border border-white/20 uppercase tracking-wider">
+          {{ store.roleConfig().label }}
+        </span>
+        <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-[#D6F599] text-slate-950 flex items-center gap-1 shadow-xs">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+          <span>Active On-Duty</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- User Information & Identity Bar -->
+    <div class="px-6 pb-6 pt-0 relative flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-12 sm:-mt-14">
+      <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+        <!-- Large Avatar with Border Ring -->
+        <div class="relative group">
+          <div
+            class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-4 border-white shadow-lg flex items-center justify-center font-black text-2xl sm:text-3xl text-slate-900 shadow-slate-200 transition-transform select-none"
+            [style.backgroundColor]="profile().avatarBg"
+          >
+            {{ store.roleConfig().initials || '👤' }}
+          </div>
+          <button
+            type="button"
+            (click)="cycleAvatarColor()"
+            class="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-md text-slate-700 flex items-center justify-center hover:bg-slate-50 transition-colors cursor-pointer"
+            title="Change avatar color accent"
+            aria-label="Change avatar color"
+          >
+            <mat-icon class="text-xs w-3.5 h-3.5">palette</mat-icon>
+          </button>
+        </div>
+
+        <!-- Name, Title, and Branch Details -->
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {{ profile().name }}
+            </h1>
+            <span class="text-xs font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold">
+              {{ profile().licenseNumber }}
+            </span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-500 font-medium">
+            <span class="flex items-center gap-1">
+              <mat-icon class="text-xs w-3.5 h-3.5 text-slate-400">email</mat-icon>
+              <span>{{ profile().email }}</span>
+            </span>
+            <span>·</span>
+            <span class="flex items-center gap-1">
+              <mat-icon class="text-xs w-3.5 h-3.5 text-slate-400">store</mat-icon>
+              <span>{{ profile().branch }}</span>
+            </span>
+            <span>·</span>
+            <span class="flex items-center gap-1">
+              <mat-icon class="text-xs w-3.5 h-3.5 text-slate-400">schedule</mat-icon>
+              <span>{{ profile().shift }}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions: Switch Role Station & Save -->
+      <div class="flex items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0">
+        <a
+          routerLink="/dashboard"
+          class="px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors flex items-center gap-1.5 shadow-2xs"
+        >
+          <mat-icon class="text-xs w-3.5 h-3.5">dashboard</mat-icon>
+          <span>Dashboard</span>
+        </a>
+        <button
+          type="button"
+          (click)="saveProfile()"
+          [disabled]="profileForm.invalid || !profileForm.dirty"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-[#0A2623] hover:bg-slate-900 disabled:opacity-40 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+        >
+          <mat-icon class="text-xs w-3.5 h-3.5 text-[#9DE8D7]">check_circle</mat-icon>
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs for Profile -->
+  <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-2xs">
+    <button
+      type="button"
+      (click)="activeTab.set('details')"
+      class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+      [class.bg-[#0A2623]]="activeTab() === 'details'"
+      [class.text-white]="activeTab() === 'details'"
+      [class.shadow-xs]="activeTab() === 'details'"
+      [class.text-slate-600]="activeTab() !== 'details'"
+      [class.hover:bg-slate-50]="activeTab() !== 'details'"
+    >
+      <mat-icon class="text-sm w-4 h-4" [class.text-[#9DE8D7]]="activeTab() === 'details'">person</mat-icon>
+      <span>Personal &amp; Professional</span>
+    </button>
+
+    <button
+      type="button"
+      (click)="activeTab.set('security')"
+      class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+      [class.bg-[#0A2623]]="activeTab() === 'security'"
+      [class.text-white]="activeTab() === 'security'"
+      [class.shadow-xs]="activeTab() === 'security'"
+      [class.text-slate-600]="activeTab() !== 'security'"
+      [class.hover:bg-slate-50]="activeTab() !== 'security'"
+    >
+      <mat-icon class="text-sm w-4 h-4" [class.text-[#FCD385]]="activeTab() === 'security'">shield</mat-icon>
+      <span>Security &amp; Terminal PIN</span>
+    </button>
+
+    <button
+      type="button"
+      (click)="activeTab.set('permissions')"
+      class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+      [class.bg-[#0A2623]]="activeTab() === 'permissions'"
+      [class.text-white]="activeTab() === 'permissions'"
+      [class.shadow-xs]="activeTab() === 'permissions'"
+      [class.text-slate-600]="activeTab() !== 'permissions'"
+      [class.hover:bg-slate-50]="activeTab() !== 'permissions'"
+    >
+      <mat-icon class="text-sm w-4 h-4" [class.text-[#B4B8FB]]="activeTab() === 'permissions'">vpn_key</mat-icon>
+      <span>Role &amp; Station Access</span>
+    </button>
+
+    <button
+      type="button"
+      (click)="activeTab.set('activity')"
+      class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+      [class.bg-[#0A2623]]="activeTab() === 'activity'"
+      [class.text-white]="activeTab() === 'activity'"
+      [class.shadow-xs]="activeTab() === 'activity'"
+      [class.text-slate-600]="activeTab() !== 'activity'"
+      [class.hover:bg-slate-50]="activeTab() !== 'activity'"
+    >
+      <mat-icon class="text-sm w-4 h-4" [class.text-[#D6F599]]="activeTab() === 'activity'">history</mat-icon>
+      <span>Staff Audit Trail</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: PERSONAL & CLINICAL DETAILS -->
+  @if (activeTab() === 'details') {
+    <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-6">
+      <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
+            Staff Identity &amp; Station Assignment
+          </h2>
+          <p class="text-xs text-slate-500">
+            Update your contact details, clinical license records, and primary dispensary assignment.
+          </p>
+        </div>
+        <span class="text-[11px] font-mono text-slate-400">
+          Joined {{ profile().joinedDate }}
+        </span>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="space-y-4 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Full Name -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">Full Legal Name *</label>
+            <input
+              type="text"
+              formControlName="name"
+              class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:outline-teal-600"
+            />
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">Work Email Address *</label>
+            <input
+              type="email"
+              formControlName="email"
+              class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:outline-teal-600"
+            />
+          </div>
+
+          <!-- Phone -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">Direct Contact Phone *</label>
+            <input
+              type="tel"
+              formControlName="phone"
+              class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:outline-teal-600"
+            />
+          </div>
+
+          <!-- Clinical License # -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">Clinical Registration / Employee ID *</label>
+            <input
+              type="text"
+              formControlName="licenseNumber"
+              class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono font-bold focus:outline-teal-600"
+            />
+          </div>
+
+          <!-- Primary Branch -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">Primary Assigned Dispensary Branch *</label>
+            <select
+              formControlName="branch"
+              class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:outline-teal-600 cursor-pointer"
+            >
+              <option value="Dhanmondi (HQ)">Dhanmondi (HQ Flagship)</option>
+              <option value="Mirpur Outlet">Mirpur Retail Outlet</option>
+              <option value="Uttara Hub">Uttara Central Logistics Hub</option>
+            </select>
+          </div>
+
+          <!-- Shift Schedule -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">Duty Shift / Station Role *</label>
+            <select
+              formControlName="shift"
+              class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-semibold focus:outline-teal-600 cursor-pointer"
+            >
+              <option value="Executive Operations (08:00 - 18:00)">Executive Operations (08:00 - 18:00)</option>
+              <option value="Morning Clinical Safety (08:00 - 16:00)">Morning Clinical Safety (08:00 - 16:00)</option>
+              <option value="Evening Clinical Dispensary (14:00 - 22:00)">Evening Clinical Dispensary (14:00 - 22:00)</option>
+              <option value="Retail POS Terminal 1 (09:00 - 17:00)">Retail POS Terminal 1 (09:00 - 17:00)</option>
+              <option value="Supply Chain &amp; Stock Intake (07:00 - 15:00)">Supply Chain &amp; Stock Intake (07:00 - 15:00)</option>
+              <option value="Branch Operations General (09:00 - 18:00)">Branch Operations General (09:00 - 18:00)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Professional Summary / Bio -->
+        <div>
+          <label class="block font-bold text-slate-800 mb-1">Clinical Scope &amp; Responsibilities</label>
+          <textarea
+            formControlName="bio"
+            rows="3"
+            class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-teal-600 resize-none leading-relaxed"
+            placeholder="Describe operational responsibilities, verification oversight, or specialist dispensing qualifications..."
+          ></textarea>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+          <span class="text-[11px] text-slate-400">
+            All profile edits are recorded in the compliance audit ledger.
+          </span>
+          <button
+            type="submit"
+            [disabled]="profileForm.invalid || !profileForm.dirty"
+            class="px-5 py-2.5 bg-[#0A2623] hover:bg-slate-900 disabled:opacity-40 text-white font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+          >
+            Save Profile Details
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- TAB 2: SECURITY & TERMINAL PIN -->
+  @if (activeTab() === 'security') {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Terminal Fast PIN Management -->
+      <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold">
+            <mat-icon class="text-base w-4 h-4">pin</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">POS Terminal Quick-PIN</h3>
+            <p class="text-xs text-slate-500">4-digit authorization passcode for high-speed counter login</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-amber-950">Current Registered PIN:</span>
+            <span class="font-mono text-base font-black tracking-widest text-amber-950">
+              {{ showPin() ? profile().pin : '••••' }}
+            </span>
+          </div>
+          <button
+            type="button"
+            (click)="showPin.set(!showPin())"
+            class="text-[11px] font-bold text-amber-900 hover:text-amber-950 flex items-center gap-1 cursor-pointer"
+          >
+            <mat-icon class="text-xs w-3.5 h-3.5">{{ showPin() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            <span>{{ showPin() ? 'Hide Terminal PIN' : 'Reveal Terminal PIN' }}</span>
+          </button>
+        </div>
+
+        <!-- Update PIN Form -->
+        <div class="space-y-2 pt-2">
+          <label class="block text-xs font-bold text-slate-800">Set New 4-Digit Passcode</label>
+          <div class="flex items-center gap-2">
+            <input
+              type="password"
+              maxlength="4"
+              placeholder="e.g. 5821"
+              [value]="newPinInput()"
+              (input)="newPinInput.set($any($event.target).value)"
+              class="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-center text-sm font-mono tracking-widest font-black focus:outline-teal-600"
+            />
+            <button
+              type="button"
+              (click)="updatePin()"
+              class="px-4 py-2 bg-[#0A2623] hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+            >
+              Update PIN
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400">Used for F2 Smart POS quick unlock and dispensing safety override.</p>
+        </div>
+      </div>
+
+      <!-- Authentication & 2FA Security -->
+      <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-900 flex items-center justify-center font-bold">
+            <mat-icon class="text-base w-4 h-4">security</mat-icon>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Multi-Factor Authentication (2FA)</h3>
+            <p class="text-xs text-slate-500">Hardware token or authenticator app protection</p>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl border flex items-center justify-between" [class.bg-teal-50]="profile().twoFactorEnabled" [class.border-teal-200]="profile().twoFactorEnabled" [class.bg-slate-50]="!profile().twoFactorEnabled" [class.border-slate-200]="!profile().twoFactorEnabled">
+          <div>
+            <div class="text-xs font-bold text-slate-900">
+              {{ profile().twoFactorEnabled ? '2FA Protection Active' : '2FA Protection Disabled' }}
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              {{ profile().twoFactorEnabled ? 'Time-based OTP required for clinical order overrides.' : 'Requires activation for controlled substances access.' }}
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="toggle2FA()"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            [class.bg-[#0A2623]]="profile().twoFactorEnabled"
+            [class.text-white]="profile().twoFactorEnabled"
+            [class.bg-teal-600]="!profile().twoFactorEnabled"
+            [class.text-white]="!profile().twoFactorEnabled"
+          >
+            {{ profile().twoFactorEnabled ? 'Deactivate' : 'Enable 2FA' }}
+          </button>
+        </div>
+
+        <!-- Active Station Device -->
+        <div class="space-y-2 pt-2 border-t border-slate-100">
+          <div class="text-xs font-bold text-slate-800">Current Active Device Session:</div>
+          <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-slate-500 text-base w-4 h-4">desktop_windows</mat-icon>
+              <div>
+                <div class="font-bold text-slate-900">MediFlow Chrome Workstation (Branch Desk 1)</div>
+                <div class="text-[10px] text-slate-400 font-mono">IP: 192.168.1.140 · Dhaka, Bangladesh</div>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900">
+              Current Session
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 3: ROLE PERMISSIONS & ACCESS -->
+  @if (activeTab() === 'permissions') {
+    <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-6">
+      <div class="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
+            Assigned Role &amp; Authorization Matrix
+          </h2>
+          <p class="text-xs text-slate-500">
+            Review verified permissions granted to {{ store.roleConfig().label }} under MediFlow Enterprise security policy.
+          </p>
+        </div>
+
+        <!-- Station Role Switcher -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-600">Simulate Station Role:</span>
+          <select
+            [value]="store.currentRole()"
+            (change)="onRoleSwitch($event)"
+            class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-teal-600 cursor-pointer"
+          >
+            <option value="Admin">Administrator</option>
+            <option value="Pharmacist">Pharmacist</option>
+            <option value="Cashier">Cashier</option>
+            <option value="Inventory">Inventory Manager</option>
+            <option value="BranchManager">Branch Manager</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Permissions Breakdown Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Accessible Application Routes -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <mat-icon class="text-teal-700 text-base w-4 h-4">apps</mat-icon>
+            <span>Authorized Navigation Modules ({{ store.roleConfig().pages.length }})</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            @for (page of store.roleConfig().pages; track page) {
+              <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white border border-slate-200/80 text-slate-800 flex items-center gap-1 shadow-2xs">
+                <mat-icon class="text-xs w-3 h-3 text-emerald-600">check_circle</mat-icon>
+                <span class="capitalize">{{ page }}</span>
+              </span>
+            }
+          </div>
+        </div>
+
+        <!-- Clinical & Financial Operational Actions -->
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+          <div class="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <mat-icon class="text-teal-700 text-base w-4 h-4">lock_open</mat-icon>
+            <span>Authorized Operations &amp; Safety Actions ({{ store.roleConfig().actions.length }})</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            @for (action of store.roleConfig().actions; track action) {
+              <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white border border-slate-200/80 text-slate-800 flex items-center gap-1 shadow-2xs">
+                <mat-icon class="text-xs w-3 h-3 text-teal-600">task_alt</mat-icon>
+                <span class="capitalize">{{ action }} Execution</span>
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Compliance Certification Notice -->
+      <div class="p-4 rounded-2xl bg-teal-50/50 border border-teal-200/70 flex items-start gap-3">
+        <mat-icon class="text-teal-700 text-lg w-5 h-5 shrink-0 mt-0.5">verified_user</mat-icon>
+        <div class="text-xs">
+          <span class="font-bold text-teal-950">Regulatory Compliance Certificate</span>
+          <p class="text-teal-800 mt-0.5 leading-relaxed">
+            This operator account is bound to National Directorate General of Drug Administration (DGDA) standard operating procedures. Dispensing of controlled schedules is logged immutably.
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 4: STAFF ACTIVITY AUDIT -->
+  @if (activeTab() === 'activity') {
+    <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-4">
+      <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
+            Recent Operator Actions &amp; Dispense Logs
+          </h2>
+          <p class="text-xs text-slate-500">
+            Audit trail entries executed by {{ profile().name }} on this station.
+          </p>
+        </div>
+        <span class="text-xs font-mono text-slate-400">
+          {{ staffAuditEntries().length }} events found
+        </span>
+      </div>
+
+      @if (staffAuditEntries().length === 0) {
+        <div class="p-8 text-center text-slate-400 text-xs">
+          No recent audit trail entries logged under this profile name yet.
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-400 text-[11px] font-semibold">
+                <th class="py-2.5 px-3">Timestamp</th>
+                <th class="py-2.5 px-3">Event Action</th>
+                <th class="py-2.5 px-3">Entity Reference</th>
+                <th class="py-2.5 px-3">Audit Details</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50 text-slate-700 font-medium">
+              @for (log of staffAuditEntries(); track log.time) {
+                <tr class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-3 px-3 font-mono text-[11px] text-slate-500">
+                    {{ log.time }}
+                  </td>
+                  <td class="py-3 px-3">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-900 border border-teal-200">
+                      {{ log.event }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-3 font-mono font-bold text-slate-900">
+                    {{ log.entity }}
+                  </td>
+                  <td class="py-3 px-3 text-slate-600">
+                    {{ log.details }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

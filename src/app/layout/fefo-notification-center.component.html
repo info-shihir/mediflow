@@ -1,0 +1,408 @@
+<!-- Backdrop Overlay -->
+    <div
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 transition-opacity"
+      (click)="dismissDrawer.emit()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Drawer Panel (Right Slide-over) -->
+    <aside
+      class="fixed inset-y-0 right-0 max-w-full w-full sm:max-w-xl md:max-w-2xl bg-slate-50 shadow-2xl z-50 flex flex-col border-l border-slate-200 overflow-hidden transform transition-transform"
+      role="dialog"
+      aria-labelledby="fefo-drawer-title"
+      aria-modal="true"
+    >
+      <!-- Drawer Header -->
+      <div class="p-4 sm:p-5 bg-[#0A2623] text-white border-b border-teal-900/40 shrink-0">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300">
+              <mat-icon class="text-2xl w-6 h-6">notifications_active</mat-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="fefo-drawer-title" class="text-base sm:text-lg font-black tracking-tight text-white">
+                  FEFO Expiry Alert Center
+                </h2>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#D6F599] text-slate-950">
+                  FEFO Active
+                </span>
+              </div>
+              <p class="text-xs text-teal-200/90 mt-0.5">
+                Priority dispensing queue for batches nearing expiry date
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="dismissDrawer.emit()"
+            class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close notification center"
+          >
+            <mat-icon class="text-base w-4 h-4">close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Quick Summary Metrics Bar -->
+        <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/10 text-center">
+          <div class="bg-white/10 rounded-xl p-2.5 backdrop-blur-xs">
+            <div class="text-[10px] uppercase font-bold text-rose-300 tracking-wider">Critical (&le;30d)</div>
+            <div class="text-lg font-black text-rose-200 font-mono mt-0.5">
+              {{ store.criticalFefoCount() }}
+            </div>
+          </div>
+          <div class="bg-white/10 rounded-xl p-2.5 backdrop-blur-xs">
+            <div class="text-[10px] uppercase font-bold text-amber-300 tracking-wider">Urgent (31-90d)</div>
+            <div class="text-lg font-black text-amber-200 font-mono mt-0.5">
+              {{ store.warningFefoCount() }}
+            </div>
+          </div>
+          <div class="bg-white/10 rounded-xl p-2.5 backdrop-blur-xs">
+            <div class="text-[10px] uppercase font-bold text-teal-200 tracking-wider">Capital at Risk</div>
+            <div class="text-lg font-black text-[#D6F599] font-mono mt-0.5">
+              ৳ {{ store.fefoAtRiskTotal().toFixed(0) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls: Filters, Search & Branch Selection -->
+      <div class="p-3 sm:p-4 bg-white border-b border-slate-200 space-y-3 shrink-0 shadow-2xs">
+        <!-- Search and Branch Select -->
+        <div class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <mat-icon class="absolute left-3 top-2.5 text-slate-400 text-sm w-4 h-4 pointer-events-none">search</mat-icon>
+            <input
+              type="text"
+              placeholder="Filter by medicine, batch # or SKU..."
+              [value]="searchQuery()"
+              (input)="searchQuery.set($any($event.target).value)"
+              class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-500"
+            />
+          </div>
+
+          <div class="flex items-center gap-2">
+            <select
+              [value]="selectedBranch()"
+              (change)="selectedBranch.set($any($event.target).value)"
+              class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Branches</option>
+              <option value="Dhanmondi">Dhanmondi (HQ)</option>
+              <option value="Mirpur">Mirpur</option>
+              <option value="Uttara">Uttara</option>
+            </select>
+
+            <button
+              type="button"
+              (click)="store.acknowledgeAllFefoNotifications()"
+              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1"
+              title="Mark all currently active alerts as acknowledged"
+            >
+              <mat-icon class="text-xs w-3.5 h-3.5">done_all</mat-icon>
+              <span>Ack All</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+          <button
+            type="button"
+            (click)="activeUrgencyTab.set('all')"
+            class="px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+            [class.bg-[#0A2623]]="activeUrgencyTab() === 'all'"
+            [class.text-white]="activeUrgencyTab() === 'all'"
+            [class.bg-slate-100]="activeUrgencyTab() !== 'all'"
+            [class.text-slate-600]="activeUrgencyTab() !== 'all'"
+          >
+            <span>All Alerts</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" [class.bg-white/20]="activeUrgencyTab() === 'all'" [class.bg-slate-200]="activeUrgencyTab() !== 'all'">
+              {{ store.fefoNotifications().length }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            (click)="activeUrgencyTab.set('critical')"
+            class="px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+            [class.bg-rose-700]="activeUrgencyTab() === 'critical'"
+            [class.text-white]="activeUrgencyTab() === 'critical'"
+            [class.bg-rose-50]="activeUrgencyTab() !== 'critical'"
+            [class.text-rose-700]="activeUrgencyTab() !== 'critical'"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            <span>Critical (&le;30d)</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-rose-200 text-rose-900">
+              {{ countByUrgency('critical') }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            (click)="activeUrgencyTab.set('warning')"
+            class="px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+            [class.bg-amber-600]="activeUrgencyTab() === 'warning'"
+            [class.text-white]="activeUrgencyTab() === 'warning'"
+            [class.bg-amber-50]="activeUrgencyTab() !== 'warning'"
+            [class.text-amber-700]="activeUrgencyTab() !== 'warning'"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            <span>Warning (31-60d)</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-200 text-amber-900">
+              {{ countByUrgency('warning') }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            (click)="activeUrgencyTab.set('attention')"
+            class="px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+            [class.bg-teal-700]="activeUrgencyTab() === 'attention'"
+            [class.text-white]="activeUrgencyTab() === 'attention'"
+            [class.bg-teal-50]="activeUrgencyTab() !== 'attention'"
+            [class.text-teal-700]="activeUrgencyTab() !== 'attention'"
+          >
+            <span>Approaching (61-90d)</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-teal-200 text-teal-900">
+              {{ countByUrgency('attention') }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            (click)="activeUrgencyTab.set('acknowledged')"
+            class="px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+            [class.bg-slate-700]="activeUrgencyTab() === 'acknowledged'"
+            [class.text-white]="activeUrgencyTab() === 'acknowledged'"
+            [class.bg-slate-100]="activeUrgencyTab() !== 'acknowledged'"
+            [class.text-slate-600]="activeUrgencyTab() !== 'acknowledged'"
+          >
+            <span>Acknowledged</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-200 text-slate-700">
+              {{ countAcknowledged() }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notification List -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
+        @for (item of filteredNotifications(); track item.id) {
+          <div
+            class="bg-white rounded-2xl border transition-all shadow-2xs hover:shadow-sm p-4 relative"
+            [class.border-rose-300]="item.urgency === 'critical' && !item.acknowledged"
+            [class.bg-rose-50/20]="item.urgency === 'critical' && !item.acknowledged"
+            [class.border-amber-300]="item.urgency === 'warning' && !item.acknowledged"
+            [class.bg-amber-50/20]="item.urgency === 'warning' && !item.acknowledged"
+            [class.border-slate-200]="item.urgency === 'attention' || item.acknowledged"
+            [class.opacity-80]="item.acknowledged"
+          >
+            <!-- Top Badges Row -->
+            <div class="flex items-center justify-between gap-2 mb-2.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <!-- FEFO Rank Badge -->
+                <span
+                  class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase font-mono tracking-wider flex items-center gap-1"
+                  [class.bg-[#0A2623]]="item.fefoRank === 1"
+                  [class.text-[#D6F599]]="item.fefoRank === 1"
+                  [class.bg-slate-800]="item.fefoRank > 1"
+                  [class.text-slate-200]="item.fefoRank > 1"
+                >
+                  <mat-icon class="text-xs w-3 h-3 text-[#D6F599]">priority_high</mat-icon>
+                  <span>FEFO #{{ item.fefoRank }} Priority</span>
+                </span>
+
+                <!-- Urgency Tag -->
+                @if (item.urgency === 'critical') {
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+                    <span>Expires in {{ item.daysRemaining }} days</span>
+                  </span>
+                } @else if (item.urgency === 'warning') {
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                    <span>Expires in {{ item.daysRemaining }} days</span>
+                  </span>
+                } @else {
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                    Expires in {{ item.daysRemaining }} days
+                  </span>
+                }
+
+                @if (item.isEarliestForSku) {
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">
+                    Earliest for SKU
+                  </span>
+                }
+              </div>
+
+              <!-- Acknowledge Toggle -->
+              <button
+                type="button"
+                (click)="toggleAcknowledge(item.batchId, item.acknowledged)"
+                class="text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                [class.text-slate-400]="item.acknowledged"
+                [class.hover:text-slate-600]="item.acknowledged"
+                [class.text-teal-700]="!item.acknowledged"
+                [class.hover:text-teal-900]="!item.acknowledged"
+                [title]="item.acknowledged ? 'Mark as unread' : 'Acknowledge alert'"
+              >
+                <mat-icon class="text-xs w-3.5 h-3.5">
+                  {{ item.acknowledged ? 'check_circle' : 'radio_button_unchecked' }}
+                </mat-icon>
+                <span>{{ item.acknowledged ? 'Acknowledged' : 'Acknowledge' }}</span>
+              </button>
+            </div>
+
+            <!-- Medicine & Batch Details -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-lg shrink-0">
+                  {{ item.emoji }}
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <span>{{ item.medicine }}</span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-bold">
+                      Batch {{ item.batch }}
+                    </span>
+                  </h3>
+                  <p class="text-xs text-slate-500 font-medium">
+                    {{ item.generic }} · <span class="text-slate-600 font-semibold">{{ item.branch }}</span>
+                  </p>
+                  <div class="text-[11px] text-slate-400 font-mono mt-0.5">
+                    Expiry: <strong class="text-slate-700">{{ item.expiry }}</strong> · SKU: {{ item.sku }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stock & Capital at Risk -->
+              <div class="text-right shrink-0">
+                <div class="text-xs font-bold text-slate-900 font-mono">
+                  <span class="text-rose-600 font-black text-sm">{{ item.stock }}</span> units on hand
+                </div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+                  ৳ {{ item.price.toFixed(2) }}/unit
+                </div>
+                <div class="text-[10px] font-bold text-amber-700 font-mono mt-0.5">
+                  ৳ {{ item.atRiskValue.toFixed(2) }} at risk
+                </div>
+              </div>
+            </div>
+
+            <!-- Interactive FEFO Actions Bar -->
+            <div class="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5">
+                <!-- 1-Click Dispense in POS Button -->
+                <button
+                  type="button"
+                  (click)="dispenseInPOS(item.sku, item.medicine, item.batch)"
+                  class="px-3 py-1.5 bg-[#0A2623] hover:bg-slate-900 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  title="Reserve this batch and load into Smart POS register"
+                >
+                  <mat-icon class="text-xs w-3.5 h-3.5 text-[#D6F599]">point_of_sale</mat-icon>
+                  <span>Dispense First in POS</span>
+                </button>
+
+                <!-- Clearance Markdown Action -->
+                <div class="relative inline-block">
+                  <button
+                    type="button"
+                    (click)="selectedClearanceBatchId.set(selectedClearanceBatchId() === item.batchId ? null : item.batchId)"
+                    class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Apply promotional clearance discount to move near-expiry stock"
+                  >
+                    <mat-icon class="text-xs w-3.5 h-3.5">sell</mat-icon>
+                    <span>Clearance %</span>
+                  </button>
+
+                  <!-- Inline Clearance Discount Dropdown -->
+                  @if (selectedClearanceBatchId() === item.batchId) {
+                    <div class="absolute left-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg p-2 z-20 space-y-1">
+                      <div class="text-[10px] font-bold text-slate-500 px-1 uppercase tracking-wider">
+                        Accelerate Dispensing:
+                      </div>
+                      <button
+                        type="button"
+                        (click)="applyMarkdown(item.batchId, 10)"
+                        class="w-full text-left px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center justify-between cursor-pointer"
+                      >
+                        <span>10% Markdown</span>
+                        <span class="font-mono text-slate-500">৳{{ (item.price * 0.9).toFixed(2) }}</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="applyMarkdown(item.batchId, 20)"
+                        class="w-full text-left px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-50 rounded-lg flex items-center justify-between cursor-pointer"
+                      >
+                        <span>20% Markdown</span>
+                        <span class="font-mono font-bold">৳{{ (item.price * 0.8).toFixed(2) }}</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="applyMarkdown(item.batchId, 30)"
+                        class="w-full text-left px-2 py-1 text-xs font-bold text-rose-700 hover:bg-rose-50 rounded-lg flex items-center justify-between cursor-pointer"
+                      >
+                        <span>30% Clearance</span>
+                        <span class="font-mono font-bold">৳{{ (item.price * 0.7).toFixed(2) }}</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- View in Inventory Ledger Link -->
+              <button
+                type="button"
+                (click)="viewInInventory(item.sku)"
+                class="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>Ledger</span>
+                <mat-icon class="text-xs w-3.5 h-3.5">arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="py-16 text-center text-slate-400">
+            <div class="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 mx-auto mb-3">
+              <mat-icon class="text-3xl w-7 h-7">verified</mat-icon>
+            </div>
+            <h3 class="text-sm font-bold text-slate-700">No matching expiry alerts</h3>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto mt-1">
+              All inventory batches in this view are in safe expiry windows, or filters excluded them.
+            </p>
+          </div>
+        }
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="p-4 bg-white border-t border-slate-200 shrink-0 flex items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-1.5 text-slate-500 text-[11px]">
+          <mat-icon class="text-teal-600 text-sm w-4 h-4">info</mat-icon>
+          <span>Dispensing always draws earliest expiry batch first</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="goToHeatmap()"
+            class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+            title="Open physical warehouse storage zone expiry heatmap"
+          >
+            <mat-icon class="text-xs w-3.5 h-3.5 text-amber-700">grid_view</mat-icon>
+            <span>Zone Heatmap</span>
+          </button>
+          <button
+            type="button"
+            (click)="goToPOS()"
+            class="px-3 py-1.5 bg-[#0A2623] hover:bg-slate-900 text-white font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            <mat-icon class="text-xs w-3.5 h-3.5">shopping_cart_checkout</mat-icon>
+            <span>Open Register</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  

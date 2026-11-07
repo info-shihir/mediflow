@@ -1,0 +1,168 @@
+<div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+            Returns & Refund Register
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Audit-tracked medicine returns with stock quarantine checks and refund supervisor authorization.
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="openReturnModal()"
+          class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+        >
+          <mat-icon class="text-sm w-4 h-4">add</mat-icon>
+          <span>Create Return Request</span>
+        </button>
+      </div>
+
+      <!-- Regulatory Notice -->
+      <div class="p-3.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs flex items-start gap-2.5">
+        <mat-icon class="text-slate-500 text-base w-4 h-4 shrink-0 mt-0.5">verified</mat-icon>
+        <div class="space-y-0.5">
+          <div class="font-bold text-slate-900">Quarantine & Approval Policy</div>
+          <p class="text-slate-600 text-[11px]">
+            Returned pharmaceuticals must not be immediately restocked into general inventory without quality assurance inspection. Approved refunds record directly in the financial audit log.
+          </p>
+        </div>
+      </div>
+
+      <!-- Returns Register Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden space-y-3">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Return Transactions</h2>
+            <p class="text-[11px] text-slate-500">Track claim eligibility, authorization, and customer reimbursements</p>
+          </div>
+          <span class="text-xs font-mono text-slate-500">
+            {{ store.returns().length }} recorded returns
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-200">
+                <th class="py-2.5 px-4">Return ID</th>
+                <th class="py-2.5 px-4">Original Sale</th>
+                <th class="py-2.5 px-4">Customer</th>
+                <th class="py-2.5 px-4">Item Returned</th>
+                <th class="py-2.5 px-4">Refund Amount</th>
+                <th class="py-2.5 px-4">Reason</th>
+                <th class="py-2.5 px-4">Status</th>
+                <th class="py-2.5 px-4 text-right">Supervisor Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              @for (ret of store.returns(); track ret.id) {
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ ret.id }}</td>
+                  <td class="py-3 px-4 font-mono text-slate-600">{{ ret.sale }}</td>
+                  <td class="py-3 px-4 font-medium">{{ ret.customer }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-800">{{ ret.item }}</td>
+                  <td class="py-3 px-4 font-mono font-bold text-teal-800">
+                    ৳ {{ ret.amount.toFixed(2) }}
+                  </td>
+                  <td class="py-3 px-4 text-slate-600">{{ ret.reason }}</td>
+                  <td class="py-3 px-4">
+                    @if (ret.status === 'Refunded') {
+                      <span class="inline-flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Refunded
+                      </span>
+                    } @else if (ret.status === 'Rejected') {
+                      <span class="inline-flex items-center gap-1.5 text-rose-700 font-semibold text-[11px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rejected
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 text-amber-700 font-semibold text-[11px]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending Approval
+                      </span>
+                    }
+                  </td>
+                  <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                    @if (ret.status === 'Pending approval') {
+                      <button
+                        type="button"
+                        (click)="store.updateReturnStatus(ret.id, 'Refunded')"
+                        class="px-2.5 py-1 text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-md transition-colors"
+                      >
+                        Approve Refund
+                      </button>
+                      <button
+                        type="button"
+                        (click)="store.updateReturnStatus(ret.id, 'Rejected')"
+                        class="px-2.5 py-1 text-xs border border-slate-200 hover:bg-slate-100 text-rose-600 font-semibold rounded-md transition-colors"
+                      >
+                        Reject
+                      </button>
+                    } @else {
+                      <span class="text-slate-400 text-xs">—</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="py-12 text-center text-slate-400">
+                    No return claims recorded in register.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Create Return Request Modal -->
+      @if (showReturnModal()) {
+        <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <h3 class="font-bold text-slate-900 text-sm">Create Medicine Return Request</h3>
+              <button type="button" (click)="showReturnModal.set(false)" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <form [formGroup]="returnForm" (ngSubmit)="submitReturn()" class="p-5 space-y-3.5 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Original Invoice / Sale ID *</label>
+                <input formControlName="sale" placeholder="e.g. SL-1081" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Customer Name *</label>
+                <input formControlName="customer" placeholder="e.g. Farhana Rahman" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Medicine Item Returned *</label>
+                <input formControlName="item" placeholder="e.g. Seclo 20mg (1 strip)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Requested Refund (৳) *</label>
+                  <input type="number" step="0.01" formControlName="amount" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold" />
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Return Reason *</label>
+                  <select formControlName="reason" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs cursor-pointer">
+                    <option value="Damaged pack">Damaged pack / broken seal</option>
+                    <option value="Incorrect item supplied">Incorrect item supplied</option>
+                    <option value="Duplicate transaction">Duplicate transaction</option>
+                    <option value="Other">Other clinical return</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Customer / Pharmacist Notes</label>
+                <textarea formControlName="notes" placeholder="Condition of packaging, storage temperature notice, etc." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs min-h-[50px]"></textarea>
+              </div>
+
+              <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                <button type="button" (click)="showReturnModal.set(false)" class="px-3 py-1.5 text-slate-600 font-semibold">Cancel</button>
+                <button type="submit" [disabled]="returnForm.invalid" class="px-4 py-1.5 bg-teal-600 text-white font-bold rounded-lg disabled:opacity-50">Submit for Approval</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+    </div>
+  

@@ -1,0 +1,213 @@
+<div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+            Purchasing & Invoice OCR Intake
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Automate stock receiving by previewing optical document extraction before committing to the batch ledger.
+          </p>
+        </div>
+        <a
+          routerLink="/reorder"
+          class="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+        >
+          <span>View Reorder Suggestions →</span>
+        </a>
+      </div>
+
+      <!-- Prototype Notice -->
+      <div class="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-amber-900 text-xs flex items-center gap-2">
+        <mat-icon class="text-amber-700 text-base w-4 h-4">info</mat-icon>
+        <span>
+          <strong>Intake Verification:</strong> Review each extracted batch lot, expiration date, and unit cost before confirming stock receipt.
+        </span>
+      </div>
+
+      <!-- Two Column Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Intake Dropzone (Left 5 cols) -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Supplier Invoice Document</h2>
+              <p class="text-[11px] text-slate-500">Upload paper scan, invoice PDF, or delivery slip</p>
+            </div>
+            <span class="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+              OCR Engine
+            </span>
+          </div>
+
+          <!-- Dropzone -->
+          <div
+            class="border-2 border-dashed border-slate-200 hover:border-teal-400 bg-slate-50/60 rounded-xl p-6 text-center transition-colors"
+          >
+            <mat-icon class="text-4xl text-slate-400 mx-auto block mb-2">upload_file</mat-icon>
+            <div class="text-xs font-bold text-slate-800">
+              Drag & Drop supplier invoice PDF / JPG
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1">
+              Supports invoices from Square, Beximco, MedSupply, Incepta
+            </p>
+
+            <input
+              #fileInput
+              type="file"
+              accept=".pdf,image/*"
+              (change)="onFileSelected($event)"
+              class="hidden"
+            />
+
+            <button
+              type="button"
+              (click)="fileInput.click()"
+              class="mt-3 px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+            >
+              Choose Local Document
+            </button>
+
+            <div class="text-[10px] text-slate-400 mt-2 font-mono">
+              {{ selectedFileName() }}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="simulateExtraction()"
+            class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+          >
+            <mat-icon class="text-sm w-4 h-4">auto_awesome</mat-icon>
+            <span>Execute OCR Field Extraction</span>
+          </button>
+
+          @if (ocrExtracted()) {
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] text-emerald-900 flex items-center gap-2 animate-in fade-in">
+              <mat-icon class="text-emerald-600 text-base w-4 h-4">check_circle</mat-icon>
+              <span>
+                Document successfully parsed. 2 product line items matched with sample inventory catalog.
+              </span>
+            </div>
+          }
+        </div>
+
+        <!-- Extracted Fields Review (Right 7 cols) -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Extracted Invoice Metadata</h2>
+              <p class="text-[11px] text-slate-500">Edit values before committing stock to warehouse</p>
+            </div>
+            <span class="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+              Staging Draft
+            </span>
+          </div>
+
+          <!-- Metadata form grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Supplier Organization</label>
+              <input
+                #supplierInput
+                type="text"
+                value="MedSupply Ltd."
+                class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Invoice / PO Number</label>
+              <input
+                #invoiceNumInput
+                type="text"
+                value="INV-2026-1048"
+                class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Invoice Date</label>
+              <input
+                type="date"
+                value="2026-10-12"
+                class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">Receiving Branch Destination</label>
+              <select
+                #branchSelect
+                class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 cursor-pointer"
+              >
+                <option value="Dhanmondi">Dhanmondi (Central Depot)</option>
+                <option value="Uttara">Uttara Branch</option>
+                <option value="Mirpur">Mirpur Branch</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Line items table -->
+          <div class="pt-2">
+            <label class="block font-bold text-slate-700 text-xs mb-1.5">
+              Extracted Batch Items
+            </label>
+            <div class="overflow-x-auto border border-slate-200 rounded-lg">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-200">
+                    <th class="p-2.5">Product & SKU</th>
+                    <th class="p-2.5">Extracted Batch</th>
+                    <th class="p-2.5">Received Qty</th>
+                    <th class="p-2.5">Expiry Date</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (line of ocrLines(); track line.sku) {
+                    <tr>
+                      <td class="p-2.5">
+                        <div class="font-bold text-slate-900">{{ line.medicine }}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">{{ line.sku }}</div>
+                      </td>
+                      <td class="p-2.5">
+                        <input
+                          type="text"
+                          [value]="line.batch"
+                          (input)="line.batch = $any($event.target).value"
+                          class="w-24 p-1 bg-slate-50 border border-slate-200 rounded text-xs font-mono"
+                        />
+                      </td>
+                      <td class="p-2.5">
+                        <input
+                          type="number"
+                          min="1"
+                          [value]="line.qty"
+                          (input)="line.qty = +$any($event.target).value"
+                          class="w-20 p-1 bg-slate-50 border border-slate-200 rounded text-xs font-mono"
+                        />
+                      </td>
+                      <td class="p-2.5">
+                        <input
+                          type="date"
+                          [value]="line.expiry"
+                          (input)="line.expiry = $any($event.target).value"
+                          class="w-32 p-1 bg-slate-50 border border-slate-200 rounded text-xs font-mono"
+                        />
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Staging CTA -->
+          <button
+            type="button"
+            (click)="stageStockReceipt(supplierInput.value, invoiceNumInput.value, branchSelect.value)"
+            class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+          >
+            <mat-icon class="text-base w-4 h-4">inventory_2</mat-icon>
+            <span>Confirm & Stage Stock Receipt into Ledger</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  

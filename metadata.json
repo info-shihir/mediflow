@@ -1,0 +1,6 @@
+{
+  "name": "MediFlow Enterprise — Pharmacy Operations",
+  "description": "Enterprise pharmacy operations and clinical inventory management platform with FEFO batch allocation, smart POS, prescription safety verification, and AI Copilot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

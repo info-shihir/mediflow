@@ -1,0 +1,604 @@
+<div class="space-y-6">
+      <!-- Top Welcome Banner Matching Image -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+          Welcome back, {{ store.roleConfig().name }}!
+        </h1>
+
+        <div class="flex items-center gap-2">
+          <!-- This Month Pill Filter -->
+          <button
+            type="button"
+            class="bg-white border border-slate-200/80 rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-700 flex items-center gap-1.5 shadow-2xs hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            <mat-icon class="text-sm w-3.5 h-3.5 text-slate-500">calendar_today</mat-icon>
+            <span>This Month</span>
+            <mat-icon class="text-xs w-3 h-3 text-slate-400">expand_more</mat-icon>
+          </button>
+
+          <!-- Refresh Button -->
+          <button
+            type="button"
+            (click)="store.loadInitialData()"
+            class="w-8 h-8 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+            title="Refresh Analytics"
+          >
+            <mat-icon class="text-sm w-4 h-4">refresh</mat-icon>
+          </button>
+
+          <!-- Dark Team Member Pill Button from Screenshot -->
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleRoleDropdown()"
+              class="bg-[#0A2623] hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-full flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+            >
+              <span>{{ store.roleConfig().label }}</span>
+              <mat-icon class="text-xs w-3.5 h-3.5">expand_more</mat-icon>
+            </button>
+
+            @if (showRoleMenu()) {
+              <div
+                class="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40 text-xs font-semibold text-slate-700"
+              >
+                <button
+                  type="button"
+                  (click)="selectRole('Admin')"
+                  class="w-full text-left px-3.5 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Administrator
+                </button>
+                <button
+                  type="button"
+                  (click)="selectRole('Pharmacist')"
+                  class="w-full text-left px-3.5 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Pharmacist
+                </button>
+                <button
+                  type="button"
+                  (click)="selectRole('Cashier')"
+                  class="w-full text-left px-3.5 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Cashier
+                </button>
+                <button
+                  type="button"
+                  (click)="selectRole('Inventory')"
+                  class="w-full text-left px-3.5 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Inventory Manager
+                </button>
+                <button
+                  type="button"
+                  (click)="selectRole('BranchManager')"
+                  class="w-full text-left px-3.5 py-2 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Branch Manager
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Pastel KPI Cards Matching Image Colors & Layout -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. Lime Card (Todays Sales) -->
+        <div class="bg-[#D6F599] text-slate-900 p-4 rounded-2xl relative overflow-hidden shadow-2xs flex flex-col justify-between min-h-[140px]">
+            <div class="flex items-center justify-between">
+              <div class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">
+                <mat-icon class="text-xs w-3 h-3">shopping_bag</mat-icon>
+              </div>
+              <button type="button" class="text-slate-700 hover:text-slate-900 text-base font-bold leading-none">
+                ···
+              </button>
+            </div>
+
+            <div class="mt-2">
+              <div class="text-xs font-medium text-slate-700">Todays Sales</div>
+              <div class="text-2xl font-black tracking-tight text-slate-900 my-0.5">
+                $ {{ todaySalesAmount() }}
+              </div>
+              <div class="text-[10px] font-bold text-slate-800">
+                +2.5% <span class="font-normal text-slate-600">This Month</span>
+              </div>
+            </div>
+
+            <!-- Stylized mini capsule bars in card background -->
+            <div class="absolute right-4 bottom-3 flex items-end gap-1 opacity-70 pointer-events-none">
+              <div class="w-1.5 h-4 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-7 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-11 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-5 bg-slate-800/40 rounded-full"></div>
+            </div>
+          </div>
+
+          <!-- 2. Seafoam Mint Card (Available Categories) -->
+          <div class="bg-[#9DE8D7] text-slate-900 p-4 rounded-2xl relative overflow-hidden shadow-2xs flex flex-col justify-between min-h-[140px]">
+            <div class="flex items-center justify-between">
+              <div class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">
+                <mat-icon class="text-xs w-3 h-3">grid_view</mat-icon>
+              </div>
+              <button type="button" class="text-slate-700 hover:text-slate-900 text-base font-bold leading-none">
+                ···
+              </button>
+            </div>
+
+            <div class="mt-2">
+              <div class="text-xs font-medium text-slate-700">Available Categories</div>
+              <div class="text-2xl font-black tracking-tight text-slate-900 my-0.5">
+                1.457%
+              </div>
+              <div class="text-[10px] font-bold text-slate-800">
+                +2.5% <span class="font-normal text-slate-600">This Month</span>
+              </div>
+            </div>
+
+            <div class="absolute right-4 bottom-3 flex items-end gap-1 opacity-70 pointer-events-none">
+              <div class="w-1.5 h-6 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-11 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-8 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-4 bg-slate-800/40 rounded-full"></div>
+            </div>
+          </div>
+
+          <!-- 3. Soft Coral / Salmon Card (Expired Medicines) -->
+          <a
+            routerLink="/inventory"
+            [queryParams]="{view: 'heatmap'}"
+            class="bg-[#FBA7A7] text-slate-900 p-4 rounded-2xl relative overflow-hidden shadow-2xs flex flex-col justify-between min-h-[140px] hover:shadow-md transition-shadow cursor-pointer block group"
+            title="Inspect Storage Zone Expiry Heatmap in Inventory"
+          >
+            <div class="flex items-center justify-between">
+              <div class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">
+                <mat-icon class="text-xs w-3 h-3">medication</mat-icon>
+              </div>
+              <span class="text-slate-700 group-hover:text-slate-900 text-base font-bold leading-none">
+                ···
+              </span>
+            </div>
+
+            <div class="mt-2">
+              <div class="text-xs font-medium text-slate-700">Expired Medicines</div>
+              <div class="text-2xl font-black tracking-tight text-slate-900 my-0.5">
+                0.00%
+              </div>
+              <div class="text-[10px] font-bold text-slate-800">
+                +2.5% <span class="font-normal text-slate-600">This Month</span>
+              </div>
+            </div>
+
+            <div class="absolute right-4 bottom-3 flex items-end gap-1 opacity-70 pointer-events-none">
+              <div class="w-1.5 h-5 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-11 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-7 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-4 bg-slate-800/40 rounded-full"></div>
+            </div>
+          </a>
+
+          <!-- 4. Soft Periwinkle Lavender Card (System Users) -->
+          <div class="bg-[#B4B8FB] text-slate-900 p-4 rounded-2xl relative overflow-hidden shadow-2xs flex flex-col justify-between min-h-[140px]">
+            <div class="flex items-center justify-between">
+              <div class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">
+                <mat-icon class="text-xs w-3 h-3">group</mat-icon>
+              </div>
+              <button type="button" class="text-slate-700 hover:text-slate-900 text-base font-bold leading-none">
+                ···
+              </button>
+            </div>
+
+            <div class="mt-2">
+              <div class="text-xs font-medium text-slate-700">System Users</div>
+              <div class="text-2xl font-black tracking-tight text-slate-900 my-0.5">
+                255K
+              </div>
+              <div class="text-[10px] font-bold text-slate-800">
+                +2.5% <span class="font-normal text-slate-600">This Month</span>
+              </div>
+            </div>
+
+            <div class="absolute right-4 bottom-3 flex items-end gap-1 opacity-70 pointer-events-none">
+              <div class="w-1.5 h-4 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-8 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-11 bg-slate-800 rounded-full"></div>
+              <div class="w-1.5 h-5 bg-slate-800/40 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+      <!-- Middle Section: Graph Report (Donut) & Total Sales Overview (Capsule Bars) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        <!-- Graph Report (Donut Chart) - 5 cols -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-2">
+            <h3 class="text-sm font-bold text-slate-900">Graph Report</h3>
+            <button type="button" class="text-slate-400 hover:text-slate-600 text-base">···</button>
+          </div>
+
+          <!-- SVG Donut Chart with Centered Total -->
+          <div class="py-3 flex flex-col items-center justify-center relative">
+            <div class="relative w-48 h-48 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                <!-- Segment 1: Seafoam Mint (42%) -->
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  fill="transparent"
+                  stroke="#9DE8D7"
+                  stroke-width="14"
+                  stroke-dasharray="100.2 238.7"
+                  stroke-dashoffset="0"
+                />
+                <!-- Segment 2: Lime (26%) -->
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  fill="transparent"
+                  stroke="#D6F599"
+                  stroke-width="14"
+                  stroke-dasharray="62.1 238.7"
+                  stroke-dashoffset="-100.2"
+                />
+                <!-- Segment 3: Coral (18%) -->
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  fill="transparent"
+                  stroke="#FBA7A7"
+                  stroke-width="14"
+                  stroke-dasharray="43 238.7"
+                  stroke-dashoffset="-162.3"
+                />
+                <!-- Segment 4: Patterned / Periwinkle (14%) -->
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  fill="transparent"
+                  stroke="#B4B8FB"
+                  stroke-width="14"
+                  stroke-dasharray="33.4 238.7"
+                  stroke-dashoffset="-205.3"
+                  stroke-dasharray="2 3"
+                />
+              </svg>
+
+              <!-- Center Text in Ring -->
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</span>
+                <span class="text-2xl font-black text-slate-900">755K</span>
+              </div>
+
+              <!-- Percentage badges on segments matching design -->
+              <div class="absolute top-7 right-8 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-slate-800 shadow-2xs">
+                18%
+              </div>
+              <div class="absolute top-6 left-10 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-slate-800 shadow-2xs">
+                26%
+              </div>
+              <div class="absolute bottom-7 left-12 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-slate-800 shadow-2xs">
+                42%
+              </div>
+              <div class="absolute bottom-10 right-7 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-slate-800 shadow-2xs">
+                12%
+              </div>
+            </div>
+          </div>
+
+          <!-- Donut Legend Pills -->
+          <div class="flex flex-wrap items-center justify-center gap-3 pt-2 text-[11px] text-slate-600 font-medium">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#D6F599]"></span> Purchases
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#9DE8D7]"></span> Suppliers
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#FBA7A7]"></span> Sales
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#B4B8FB]"></span> No Sales
+            </span>
+          </div>
+        </div>
+
+        <!-- Total Sales Overview (Capsule Bar Chart) - 7 cols -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-1">
+            <h3 class="text-sm font-bold text-slate-900">Total Sales Overview</h3>
+            <button type="button" class="text-slate-400 hover:text-slate-600 text-base">···</button>
+          </div>
+
+          <!-- Chart Area with Floating Dark Tooltip -->
+          <div class="relative pt-6 pb-2">
+            <!-- Floating Dark Pill Tooltip above Wednesday -->
+            <div class="absolute top-0 left-[48%] -translate-x-1/2 bg-[#0A2623] text-white px-3 py-1.5 rounded-xl shadow-lg z-10 text-center animate-in fade-in">
+              <div class="text-[9px] text-slate-300 font-medium">Apr, 2025</div>
+              <div class="text-xs font-black tracking-tight">$298.00K</div>
+            </div>
+
+            <!-- Capsule Bars Grid -->
+            <div class="flex items-end justify-between gap-2 sm:gap-4 h-48 px-2">
+              <!-- Y-axis scale -->
+              <div class="flex flex-col justify-between h-full text-[10px] text-slate-400 font-mono pr-2">
+                <span>45K</span>
+                <span>30K</span>
+                <span>15K</span>
+                <span>10K</span>
+                <span>5K</span>
+                <span>0K</span>
+              </div>
+
+              <!-- Monday: Amber Capsule -->
+              <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div class="w-9 sm:w-11 h-full bg-slate-100/80 rounded-full p-1 flex flex-col justify-end">
+                  <div class="w-full h-[32%] capsule-stripes-amber rounded-full"></div>
+                </div>
+                <span class="text-[11px] text-slate-500 font-medium">Mon</span>
+              </div>
+
+              <!-- Tuesday: Pink Capsule -->
+              <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div class="w-9 sm:w-11 h-full bg-slate-100/80 rounded-full p-1 flex flex-col justify-end">
+                  <div class="w-full h-[45%] capsule-stripes-pink rounded-full"></div>
+                </div>
+                <span class="text-[11px] text-slate-500 font-medium">Tue</span>
+              </div>
+
+              <!-- Wednesday: Lime Capsule (Highest) -->
+              <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div class="w-9 sm:w-11 h-full bg-slate-100/80 rounded-full p-1 flex flex-col justify-end">
+                  <div class="w-full h-[88%] capsule-stripes-lime rounded-full"></div>
+                </div>
+                <span class="text-[11px] text-slate-900 font-bold">Wed</span>
+              </div>
+
+              <!-- Thursday: Teal Capsule -->
+              <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div class="w-9 sm:w-11 h-full bg-slate-100/80 rounded-full p-1 flex flex-col justify-end">
+                  <div class="w-full h-[62%] capsule-stripes-teal rounded-full"></div>
+                </div>
+                <span class="text-[11px] text-slate-500 font-medium">Thu</span>
+              </div>
+
+              <!-- Friday: Coral Capsule -->
+              <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div class="w-9 sm:w-11 h-full bg-slate-100/80 rounded-full p-1 flex flex-col justify-end">
+                  <div class="w-full h-[45%] capsule-stripes-pink rounded-full"></div>
+                </div>
+                <span class="text-[11px] text-slate-500 font-medium">Fri</span>
+              </div>
+
+              <!-- Saturday: Lavender Capsule -->
+              <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                <div class="w-9 sm:w-11 h-full bg-slate-100/80 rounded-full p-1 flex flex-col justify-end">
+                  <div class="w-full h-[38%] capsule-stripes-purple rounded-full"></div>
+                </div>
+                <span class="text-[11px] text-slate-500 font-medium">Sat</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: Recent Sales List Card Matching Image -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
+        <!-- Card Header with Pill Controls -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-1">
+          <h3 class="text-sm font-bold text-slate-900">Recent Sales List</h3>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Search Pill -->
+            <div class="relative">
+              <div class="bg-slate-50 border border-slate-200/80 rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs text-slate-400">
+                <mat-icon class="text-sm w-3.5 h-3.5 text-slate-400">search</mat-icon>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  [value]="tableSearch()"
+                  (input)="tableSearch.set($any($event.target).value)"
+                  class="bg-transparent border-0 p-0 text-xs text-slate-800 placeholder-slate-400 focus:outline-none w-24 sm:w-28"
+                />
+              </div>
+            </div>
+
+            <!-- Filter Pill -->
+            <button
+              type="button"
+              class="bg-slate-50 border border-slate-200/80 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 flex items-center gap-1 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <mat-icon class="text-xs w-3 h-3 text-slate-500">tune</mat-icon>
+              <span>Filter</span>
+              <mat-icon class="text-xs w-3 h-3 text-slate-400">expand_more</mat-icon>
+            </button>
+
+            <!-- Sort By Pill -->
+            <button
+              type="button"
+              class="bg-slate-50 border border-slate-200/80 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 flex items-center gap-1 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <mat-icon class="text-xs w-3 h-3 text-slate-500">swap_vert</mat-icon>
+              <span>Sort By</span>
+              <mat-icon class="text-xs w-3 h-3 text-slate-400">expand_more</mat-icon>
+            </button>
+
+            <!-- More Button -->
+            <button type="button" class="text-slate-400 hover:text-slate-600 text-base px-1">
+              ···
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Matching Image Columns -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-400 text-[11px] font-semibold">
+                <th class="py-2.5 px-3 w-8">
+                  <input type="checkbox" class="rounded border-slate-300 text-teal-600 cursor-pointer" />
+                </th>
+                <th class="py-2.5 px-3">Name</th>
+                <th class="py-2.5 px-3">Medicine</th>
+                <th class="py-2.5 px-3">User Email</th>
+                <th class="py-2.5 px-3">Quantity</th>
+                <th class="py-2.5 px-3">Total Price</th>
+                <th class="py-2.5 px-3">
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <span>Date</span>
+                    <mat-icon class="text-xs w-3 h-3">expand_more</mat-icon>
+                  </span>
+                </th>
+                <th class="py-2.5 px-3 text-right">
+                  <mat-icon class="text-sm w-4 h-4 text-slate-400">filter_list</mat-icon>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50 text-slate-700 font-medium">
+              @for (row of filteredSalesRows(); track row.id) {
+                <tr class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-3 px-3">
+                    <input
+                      type="checkbox"
+                      [checked]="row.checked"
+                      (change)="row.checked = !row.checked"
+                      class="rounded border-slate-300 text-teal-600 cursor-pointer"
+                    />
+                  </td>
+
+                  <!-- Name with Avatar -->
+                  <td class="py-3 px-3">
+                    <div class="flex items-center gap-2.5">
+                      <div
+                        class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs"
+                        [style.backgroundColor]="row.avatarBg"
+                      >
+                        {{ row.avatar }}
+                      </div>
+                      <span class="font-bold text-slate-900">{{ row.name }}</span>
+                    </div>
+                  </td>
+
+                  <!-- Medicine -->
+                  <td class="py-3 px-3 text-slate-700">
+                    {{ row.medicine }}
+                  </td>
+
+                  <!-- User Email -->
+                  <td class="py-3 px-3 text-slate-500 font-mono text-[11px]">
+                    {{ row.email }}
+                  </td>
+
+                  <!-- Quantity with - 1 + Pill Counter from Image -->
+                  <td class="py-3 px-3">
+                    <div class="inline-flex items-center gap-1 bg-[#DDF4ED]/70 rounded-full px-2 py-0.5 text-slate-800">
+                      <button
+                        type="button"
+                        (click)="decrementQty(row)"
+                        class="text-slate-500 hover:text-slate-900 font-bold text-xs"
+                      >
+                        −
+                      </button>
+                      <span class="font-bold text-xs px-1">{{ row.quantity }}</span>
+                      <button
+                        type="button"
+                        (click)="incrementQty(row)"
+                        class="w-4 h-4 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold"
+                      >
+                        ＋
+                      </button>
+                    </div>
+                  </td>
+
+                  <!-- Total Price -->
+                  <td class="py-3 px-3 font-bold text-slate-900 font-mono">
+                    $ {{ row.price.toFixed(2) }}
+                  </td>
+
+                  <!-- Date -->
+                  <td class="py-3 px-3 text-slate-500 text-[11px] whitespace-nowrap">
+                    {{ row.date }}
+                  </td>
+
+                  <!-- Action icons: Pencil, Trash, More -->
+                  <td class="py-3 px-3 text-right">
+                    <div class="flex items-center justify-end gap-2 text-slate-400">
+                      <button type="button" class="hover:text-teal-700 transition-colors" title="Edit">
+                        <mat-icon class="text-sm w-3.5 h-3.5">edit</mat-icon>
+                      </button>
+                      <button type="button" (click)="deleteRow(row.id)" class="hover:text-rose-600 transition-colors" title="Delete">
+                        <mat-icon class="text-sm w-3.5 h-3.5">delete_outline</mat-icon>
+                      </button>
+                      <button type="button" class="hover:text-slate-700 transition-colors">
+                        <mat-icon class="text-sm w-3.5 h-3.5">more_vert</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar Matching Image -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500">
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              class="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 font-semibold transition-colors"
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 font-semibold"
+            >
+              1
+            </button>
+            <button
+              type="button"
+              class="w-7 h-7 flex items-center justify-center rounded-full bg-[#0A2623] text-white font-bold shadow-xs"
+            >
+              2
+            </button>
+            <span class="px-1 text-slate-400">···</span>
+            <button
+              type="button"
+              class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 font-semibold"
+            >
+              8
+            </button>
+            <button
+              type="button"
+              class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 font-semibold"
+            >
+              9
+            </button>
+            <button
+              type="button"
+              class="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 font-semibold transition-colors"
+            >
+              Next
+            </button>
+          </div>
+
+          <!-- Entries Info & Show Dropdown -->
+          <div class="flex items-center gap-3">
+            <span class="text-slate-400 text-[11px]">Showing of 120 Entries</span>
+
+            <button
+              type="button"
+              class="bg-slate-50 border border-slate-200/80 rounded-full px-2.5 py-1 text-xs font-semibold text-slate-700 flex items-center gap-1"
+            >
+              <span>Show 3</span>
+              <mat-icon class="text-xs w-3 h-3 text-slate-400">expand_more</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  

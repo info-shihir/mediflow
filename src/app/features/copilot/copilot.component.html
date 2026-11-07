@@ -1,0 +1,209 @@
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <span>AI Pharmacy Copilot</span>
+            <span class="text-xs px-2 py-0.5 rounded font-mono font-bold bg-teal-100 text-teal-800">
+              Gemini 3.8 Flash Grounded
+            </span>
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Operational intelligence assistant grounded in real-time inventory, batch expirations, and safety queues.
+          </p>
+        </div>
+      </div>
+
+      <!-- Advisory -->
+      <div class="p-3.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs flex items-start gap-2.5">
+        <mat-icon class="text-teal-700 text-base w-4 h-4 shrink-0 mt-0.5">verified_user</mat-icon>
+        <div class="space-y-0.5">
+          <div class="font-bold text-slate-900">Clinical Decision Support Boundary</div>
+          <p class="text-slate-600 text-[11px]">
+            The AI Copilot synthesizes operational metrics, stock forecasting, and pharmacological references. It does not replace the independent clinical judgment of a licensed registered pharmacist.
+          </p>
+        </div>
+      </div>
+
+      <!-- Main Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Chat Console (Left 8 cols) -->
+        <div class="lg:col-span-8 bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between min-h-[540px]">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
+                  <mat-icon class="text-lg w-5 h-5">auto_awesome</mat-icon>
+                </div>
+                <div>
+                  <h2 class="text-sm font-bold text-slate-900">Operations Assistant</h2>
+                  <p class="text-[10px] text-slate-500">Live conversation grounded in current pharmacy state</p>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+              </span>
+            </div>
+
+            <!-- Chat Message Stream -->
+            <div
+              #scrollContainer
+              class="space-y-4 py-4 max-h-[380px] overflow-y-auto pr-2"
+            >
+              @for (msg of store.copilotMessages(); track $index) {
+                <div
+                  class="flex flex-col gap-1 text-xs"
+                  [class.items-end]="msg.sender === 'user'"
+                  [class.items-start]="msg.sender === 'assistant'"
+                >
+                  <div
+                    class="max-w-[85%] p-3.5 rounded-2xl whitespace-pre-line leading-relaxed shadow-2xs"
+                    [class.bg-teal-700]="msg.sender === 'user'"
+                    [class.text-white]="msg.sender === 'user'"
+                    [class.rounded-tr-xs]="msg.sender === 'user'"
+                    [class.bg-slate-50]="msg.sender === 'assistant'"
+                    [class.border]="msg.sender === 'assistant'"
+                    [class.border-slate-200]="msg.sender === 'assistant'"
+                    [class.text-slate-800]="msg.sender === 'assistant'"
+                    [class.rounded-tl-xs]="msg.sender === 'assistant'"
+                  >
+                    {{ msg.text }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 font-mono flex items-center gap-2 px-1">
+                    <span>{{ msg.time }}</span>
+                    @if (msg.source) {
+                      <span class="text-teal-600 font-bold">· {{ msg.source }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Bottom: Quick Prompts + Input -->
+          <div class="space-y-3 pt-3 border-t border-slate-100">
+            <!-- Quick Chips -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                type="button"
+                (click)="sendQuick('Which medicines need reordering?')"
+                class="p-2 text-left bg-slate-50 hover:bg-teal-50 hover:border-teal-300 border border-slate-200 rounded-lg text-[11px] text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <mat-icon class="text-amber-600 text-sm w-4 h-4">inventory</mat-icon>
+                <span class="truncate font-semibold">Low Stock Review</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="sendQuick('Which batches expire soon?')"
+                class="p-2 text-left bg-slate-50 hover:bg-teal-50 hover:border-teal-300 border border-slate-200 rounded-lg text-[11px] text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <mat-icon class="text-rose-600 text-sm w-4 h-4">hourglass_top</mat-icon>
+                <span class="truncate font-semibold">Near Expiry Alert</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="sendQuick('Summarize pending prescriptions needing review')"
+                class="p-2 text-left bg-slate-50 hover:bg-teal-50 hover:border-teal-300 border border-slate-200 rounded-lg text-[11px] text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <mat-icon class="text-blue-600 text-sm w-4 h-4">assignment</mat-icon>
+                <span class="truncate font-semibold">Prescription Queue</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="sendQuick('Summarize stock across branches and transfers')"
+                class="p-2 text-left bg-slate-50 hover:bg-teal-50 hover:border-teal-300 border border-slate-200 rounded-lg text-[11px] text-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <mat-icon class="text-purple-600 text-sm w-4 h-4">store</mat-icon>
+                <span class="truncate font-semibold">Branch Stock Balances</span>
+              </button>
+            </div>
+
+            <!-- Input bar -->
+            <div class="flex items-center gap-2">
+              <input
+                #copilotInput
+                type="text"
+                placeholder="Ask: 'Which medicines need urgent restocking?' or ask drug interaction details..."
+                (keydown.enter)="onSendMessage(copilotInput.value); copilotInput.value = ''"
+                class="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+              <button
+                type="button"
+                (click)="onSendMessage(copilotInput.value); copilotInput.value = ''"
+                class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <span>Ask ↗</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Context Snapshot (Right 4 cols) -->
+        <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Grounding Context</h2>
+              <p class="text-[10px] text-slate-500">Live metrics injected into model prompt</p>
+            </div>
+            <button
+              type="button"
+              (click)="store.loadInitialData()"
+              class="text-xs font-bold text-teal-700 hover:text-teal-800"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <!-- Metric Cards -->
+          <div class="space-y-3">
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span>Low / Zero Stock Batches</span>
+                <span class="font-mono text-amber-600">{{ store.lowStockBatches().length }}</span>
+              </div>
+              <div class="text-[10px] text-slate-500 line-clamp-2">
+                @for (b of store.lowStockBatches(); track b.id) {
+                  <span>{{ b.medicine }} ({{ b.stock }} at {{ b.branch }}) · </span>
+                }
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span>Expiry Watch (≤180 Days)</span>
+                <span class="font-mono text-rose-600">{{ store.nearExpiryBatches().length }}</span>
+              </div>
+              <div class="text-[10px] text-slate-500 line-clamp-2">
+                @for (b of store.nearExpiryBatches(); track b.id) {
+                  <span>{{ b.batch }} ({{ b.expiry }}) · </span>
+                }
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span>Prescription Reviews Pending</span>
+                <span class="font-mono text-blue-600">{{ store.pendingRxCount() }}</span>
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Requires clinical review before dispensing unlocks
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span>Today's Total Revenue</span>
+                <span class="font-mono text-teal-700">৳ {{ store.todayRevenue().toLocaleString() }}</span>
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Cumulative across {{ store.todaySales() }} completed register transactions
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,

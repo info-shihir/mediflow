@@ -1,0 +1,118 @@
+<div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+            System & Compliance Audit Trail
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Cryptographically timestamped user actions, clinical dispensations, and inventory adjustments.
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="exportAuditCSV()"
+          class="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+        >
+          <mat-icon class="text-sm w-4 h-4 text-slate-500">file_download</mat-icon>
+          <span>Export Audit CSV</span>
+        </button>
+      </div>
+
+      <!-- Regulatory Notice -->
+      <div class="p-3.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs flex items-start gap-2.5">
+        <mat-icon class="text-slate-600 text-base w-4 h-4 shrink-0 mt-0.5">security</mat-icon>
+        <div class="space-y-0.5">
+          <div class="font-bold text-slate-900">Regulatory Immutable Log Active</div>
+          <p class="text-slate-600 text-[11px]">
+            Every action performed in this pharmacy operations environment is permanently attributed with the authenticated user's ID, active clinical role, and UTC timestamp.
+          </p>
+        </div>
+      </div>
+
+      <!-- Audit Table Panel -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden space-y-3">
+        <!-- Toolbar -->
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/50">
+          <div class="flex flex-wrap items-center gap-2 flex-1">
+            <div class="relative min-w-[220px] flex-1 max-w-sm">
+              <mat-icon class="absolute left-3 top-2 text-slate-400 text-base w-4 h-4 pointer-events-none">
+                search
+              </mat-icon>
+              <input
+                type="text"
+                placeholder="Search user, event, or entity..."
+                [value]="searchQuery()"
+                (input)="searchQuery.set($any($event.target).value)"
+                class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+
+            <select
+              [value]="eventFilter()"
+              (change)="eventFilter.set($any($event.target).value)"
+              class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Events</option>
+              <option value="Sale">Sale Transactions</option>
+              <option value="Inventory">Inventory Lot Adjustments</option>
+              <option value="Prescription">Prescription Clinical Reviews</option>
+              <option value="Purchasing">Purchasing & POs</option>
+              <option value="Branch">Inter-Branch Transfers</option>
+              <option value="Returns">Returns & Refunds</option>
+              <option value="Security">Security & Role Auth</option>
+            </select>
+          </div>
+
+          <span class="text-xs font-mono text-slate-500">
+            {{ filteredAuditLog().length }} events captured
+          </span>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-200">
+                <th class="py-2.5 px-4">Timestamp</th>
+                <th class="py-2.5 px-4">Operator</th>
+                <th class="py-2.5 px-4">Active Role</th>
+                <th class="py-2.5 px-4">Event Type</th>
+                <th class="py-2.5 px-4">Entity</th>
+                <th class="py-2.5 px-4">Audit Details</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              @for (a of filteredAuditLog(); track $index) {
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                  <td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">{{ a.time }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-900">{{ a.user }}</td>
+                  <td class="py-3 px-4 text-slate-600">{{ a.role }}</td>
+                  <td class="py-3 px-4">
+                    <span
+                      class="inline-flex items-center gap-1 font-semibold text-[11px]"
+                      [class.text-teal-700]="a.event === 'Sale'"
+                      [class.text-blue-700]="a.event === 'Prescription'"
+                      [class.text-amber-700]="a.event === 'Inventory'"
+                      [class.text-rose-700]="a.event === 'Security'"
+                      [class.text-purple-700]="a.event !== 'Sale' && a.event !== 'Prescription' && a.event !== 'Inventory' && a.event !== 'Security'"
+                    >
+                      {{ a.event }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-mono font-bold text-slate-800">{{ a.entity }}</td>
+                  <td class="py-3 px-4 text-slate-600">{{ a.details }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="py-12 text-center text-slate-400">
+                    No audit records match the filter criteria.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  
