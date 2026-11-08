@@ -35,7 +35,7 @@ export class App implements OnInit {
   }
 
   ngOnInit() {
-    this.store.loadInitialData();
+    // this.store.loadInitialData(); // Load data after authentication instead of on app init
     const url = this.router.url.split('?')[0];
     this.isLoginPage.set(url === '/login');
   }

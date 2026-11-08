@@ -196,8 +196,18 @@ export interface StorageZone {
   gridArea?: string;
 }
 
+export interface RoleView {
+  id: number;
+  name: string;
+  permissions: string[];
+}
+
+export interface PermissionView {
+  name: string;
+  description?: string;
+}
+
 export interface FefoBatchSuggestion {
-  batchId: number;
   batchNumber: string;
   sku: string;
   medicineName: string;
@@ -212,6 +222,7 @@ export interface FefoBatchSuggestion {
   unitPrice: number;
   cost: number;
   shelfLocation?: string;
+  batchId: number;
   isEarliestExpiry: boolean;
 }
 

@@ -6,7 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
-import {apiRouter} from './server/api-router';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -14,10 +14,18 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 // Body parser middleware for JSON payloads
-app.use(express.json());
+// app.use(express.json()); // Disabled to avoid consuming request body for proxied API calls
 
 // Register Pharmacy Operations REST API
-app.use('/api', apiRouter);
+// Proxy Pharmacy Operations REST API to Spring Boot backend
+const backendUrl = process.env['BACKEND_URL'] || 'http://localhost:8080';
+app.use('/api', createProxyMiddleware({
+  target: backendUrl,
+  changeOrigin: true,
+  secure: false,
+  ws: false,
+  logLevel: 'error',
+}));
 
 /**
  * Serve static files from /browser

@@ -570,9 +570,43 @@ apiRouter.post('/audit', (req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------
-// GEMINI AI PHARMACY COPILOT ENDPOINT
+// ROLE & PERMISSION ENDPOINTS
 // ----------------------------------------------------
-apiRouter.post('/copilot/chat', async (req: Request, res: Response) => {
+let nextRoleId = 1;
+const customRoles: any[] = [];
+const availablePermissions = [
+  {name: 'dashboard', description: 'Access dashboard'},
+  {name: 'sale', description: 'Perform sales operations'},
+  {name: 'inventory', description: 'Manage inventory'},
+  {name: 'prescription', description: 'Handle prescriptions'},
+  {name: 'purchase', description: 'Create purchase orders'},
+  {name: 'reorder', description: 'Trigger reordering'},
+  {name: 'return', description: 'Process returns'},
+  {name: 'branch', description: 'Branch management'},
+  {name: 'audit', description: 'View audit logs'},
+  {name: 'settings', description: 'Access settings'},
+  {name: 'reports', description: 'View reports'}
+];
+
+apiRouter.get('/admin/roles', (_req: Request, res: Response) => {
+  res.json({success: true, data: customRoles});
+});
+
+apiRouter.post('/admin/roles', (req: Request, res: Response) => {
+  const {name, permissions} = req.body;
+  if (!name) {
+    res.status(400).json({success: false, message: 'Role name required'});
+    return;
+  }
+  const role = {id: nextRoleId++, name, permissions: Array.isArray(permissions) ? permissions : []};
+  customRoles.push(role);
+  res.status(201).json({success: true, data: role});
+});
+
+apiRouter.get('/admin/permissions', (_req: Request, res: Response) => {
+  res.json({success: true, data: availablePermissions});
+});
+
   const {message} = req.body;
   if (!message || typeof message !== 'string') {
     res

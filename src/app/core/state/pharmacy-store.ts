@@ -1,4 +1,5 @@
 import {computed, inject} from '@angular/core';
+import {forkJoin} from 'rxjs';
 import {signalStore, withState, withComputed, withMethods, patchState} from '@ngrx/signals';
 import {PharmacyApi} from '../services/pharmacy-api';
 import {
@@ -50,6 +51,23 @@ export interface PharmacySettings {
 }
 
 export interface PharmacyState {
+  /**
+   * Authentication state – true after a successful login.
+   */
+  isAuthenticated: boolean;
+  /**
+   * Username from the backend (lower‑case email).
+   */
+  authUsername: string;
+  /**
+   * Raw list of roles returned by the backend (e.g. ['ADMIN']).
+   */
+  authRoles: string[];
+  /**
+   * Raw list of permissions returned by the backend (e.g. ['sale','inventory']).
+   */
+  authPermissions: string[];
+
   batches: BatchItem[];
   prescriptions: PrescriptionItem[];
   sales: SaleRecord[];
@@ -58,16 +76,17 @@ export interface PharmacyState {
   returns: ReturnItemRecord[];
   auditLog: AuditItemRecord[];
   cart: CartItem[];
-  discount: number;
+  isLoading: boolean;
   currentRole: UserRole;
   fefoEnabled: boolean;
   acknowledgedFefoBatchIds: number[];
   toasts: ToastMessage[];
   lastReceipt: SaleRecord | null;
-  isLoading: boolean;
+  jwtToken: string;
   copilotMessages: CopilotMessage[];
   settings: PharmacySettings;
   userProfiles: Record<UserRole, UserProfile>;
+  discount: number;
 }
 
 const ROLES_MAP: Record<UserRole, RoleConfig> = {
@@ -166,12 +185,17 @@ const initialState: PharmacyState = {
   auditLog: [],
   cart: [],
   discount: 0,
+  isLoading: false,
   currentRole: 'Admin',
   fefoEnabled: true,
   acknowledgedFefoBatchIds: [],
   toasts: [],
+  jwtToken: '',
   lastReceipt: null,
-  isLoading: false,
+  isAuthenticated: false,
+  authUsername: '',
+  authRoles: [],
+  authPermissions: [],
   copilotMessages: [
     {
       sender: 'assistant',
@@ -627,11 +651,13 @@ export const PharmacyStore = signalStore(
     }
 
     function canPerform(action: string): boolean {
-      const allowed = store.roleConfig().actions.includes(action);
+      const allowedByRole = store.roleConfig().actions.includes(action);
+      const allowedByPermission = store.authPermissions().includes(action);
+      const allowed = allowedByRole || allowedByPermission;
       if (!allowed) {
         showToast(
           'Permission denied',
-          `${store.roleConfig().label} cannot perform this action in demo mode.`,
+          `${store.roleConfig().label} cannot perform "${action}".`,
           'warn',
         );
       }
@@ -640,6 +666,22 @@ export const PharmacyStore = signalStore(
 
     function canAccessPage(page: string): boolean {
       return store.roleConfig().pages.includes(page);
+    }
+
+    function hasPermission(permission: string): boolean {
+      const allowed = store.authPermissions().includes(permission);
+      if (!allowed) {
+        showToast(
+          'Permission denied',
+          `${store.roleConfig().label} lacks permission "${permission}".`,
+          'warn',
+        );
+      }
+      return allowed;
+    }
+
+    function setToken(token: string) {
+      patchState(store, { jwtToken: token });
     }
 
     function allocateFEFO(sku: string, qty: number): CartAllocation[] | null {
@@ -969,6 +1011,8 @@ export const PharmacyStore = signalStore(
       showToast,
       canPerform,
       canAccessPage,
+      hasPermission,
+      setToken,
 
       setRole(role: UserRole) {
         patchState(store, {currentRole: role});
@@ -1243,6 +1287,7 @@ export const PharmacyStore = signalStore(
                 sales: [sale, ...store.sales()],
                 cart: [],
                 discount: 0,
+  isLoading: false,
                 lastReceipt: sale,
               });
               // Refresh batches to keep stock accurate

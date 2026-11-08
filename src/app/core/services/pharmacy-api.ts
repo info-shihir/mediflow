@@ -1,16 +1,7 @@
 import {Injectable, inject} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable, catchError, map, of} from 'rxjs';
-import {
-  BatchItem,
-  PrescriptionItem,
-  SaleRecord,
-  PurchaseOrderRecord,
-  StockTransferRecord,
-  ReturnItemRecord,
-  AuditItemRecord,
-  CartItem,
-} from '../models/pharmacy.models';
+import { RoleView, PermissionView, BatchItem, SaleRecord, CartItem, PrescriptionItem, PurchaseOrderRecord, StockTransferRecord, ReturnItemRecord, AuditItemRecord } from '../models/pharmacy.models';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -327,25 +318,40 @@ export class PharmacyApi {
       );
   }
 
-  queryCopilot(
-    message: string,
-  ): Observable<{reply: string; source: string; timestamp: string}> {
+  getRoles(): Observable<RoleView[]> {
     return this.http
-      .post<ApiResponse<{reply: string; source: string; timestamp: string}>>(
-        `${this.baseUrl}/copilot/chat`,
-        {message},
-      )
+      .get<ApiResponse<RoleView[]>>(`${this.baseUrl}/admin/roles`)
       .pipe(
         map((res) => res.data),
-        catchError((err) => {
-          console.error('Copilot query error:', err);
-          return of({
-            reply:
-              'Could not connect to the operational copilot service. Please try again.',
-            source: 'error-handler',
-            timestamp: new Date().toLocaleTimeString(),
-          });
-        }),
+        catchError(() => of([])),
+      );
+  }
+
+  createRole(role: {name: string; permissions: string[]}): Observable<RoleView> {
+    return this.http
+      .post<ApiResponse<RoleView>>(`${this.baseUrl}/admin/roles`, role)
+      .pipe(
+        map((res) => res.data),
+        catchError(() => of({id: 0, name: '', permissions: []} as RoleView)),
+      );
+  }
+
+  getPermissions(): Observable<PermissionView[]> {
+    return this.http
+      .get<ApiResponse<PermissionView[]>>(`${this.baseUrl}/admin/permissions`)
+      .pipe(
+        map((res) => res.data),
+        catchError(() => of([])),
+      );
+  }
+
+
+  queryCopilot(message: string): Observable<{reply: string; source: string; timestamp: string}> {
+    return this.http
+      .post<ApiResponse<{reply: string; source: string; timestamp: string}>>(`${this.baseUrl}/copilot/chat`, {message})
+      .pipe(
+        map((res) => res.data),
+        catchError(() => of({reply: '', source: '', timestamp: ''})),
       );
   }
 }

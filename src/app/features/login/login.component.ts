@@ -14,6 +14,8 @@ import {Router} from '@angular/router';
 import {MatIconModule} from '@angular/material/icon';
 import {PharmacyStore} from '../../core/state/pharmacy-store';
 import {UserRole} from '../../core/models/pharmacy.models';
+import {HttpClient} from '@angular/common/http';
+
 
 export interface DemoAccount {
   role: UserRole;
@@ -262,11 +264,11 @@ export interface DemoAccount {
       }
     `,
   ],
-
 })
 export class Login {
   readonly store = inject(PharmacyStore);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
 
   readonly showPassword = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
@@ -322,22 +324,20 @@ export class Login {
   ];
 
   readonly loginForm = new FormGroup({
-    branch: new FormControl('Downtown Flagship', {nonNullable: true}),
-    email: new FormControl('admin@mediflow.io', {
+    username: new FormControl('admin@mediflow.io', {
       nonNullable: true,
-      validators: [Validators.required, Validators.email],
+      validators: [Validators.required],
     }),
-    password: new FormControl('••••••••', {
+    password: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(4)],
     }),
-    rememberMe: new FormControl(true, {nonNullable: true}),
   });
 
   selectAccount(acc: DemoAccount) {
     this.selectedRole.set(acc.role);
     this.loginForm.patchValue({
-      email: acc.email,
+      username: acc.email,
       password: 'mediflow2026',
     });
     this.errorMessage.set('');
@@ -357,27 +357,40 @@ export class Login {
     this.errorMessage.set('');
     this.isSubmitting.set(true);
 
-    const email = this.loginForm.controls.email.value.toLowerCase().trim();
+    const username = this.loginForm.controls.username.value.toLowerCase().trim();
+    const password = this.loginForm.controls.password.value;
 
-    // Resolve matching role based on email or fallback to selected role
-    let targetRole: UserRole = this.selectedRole();
-    const matched = this.demoAccounts.find(
-      (a) => a.email.toLowerCase() === email,
-    );
-    if (matched) {
-      targetRole = matched.role;
-    }
-
-    // Simulate authenticating credentials
-    setTimeout(() => {
-      this.isSubmitting.set(false);
-      this.store.setRole(targetRole);
-      this.store.showToast(
-        'Welcome Back',
-        `Signed in successfully as ${this.store.roleConfig().name}.`,
-        'success',
-      );
-      this.router.navigate(['/dashboard']);
-    }, 500);
+    // Obtain CSRF token cookie first
+    this.http.get('/api/auth/csrf', { responseType: 'text' }).subscribe({
+      next: () => {
+        // Perform real login against backend
+        this.http
+          .post<any>('/api/auth/login', { username: username, password }, { withCredentials: true })
+          .subscribe({
+            next: (res) => {
+              // Store JWT token from backend
+              this.store.setToken(res.token);
+              // this.store.loadInitialData(); // Removed – store loads data lazily after login
+              this.store.showToast(
+                'Welcome Back',
+                `Signed in successfully as ${this.store.roleConfig().name}.`,
+                'success',
+              );
+              this.router.navigate(['/dashboard']);
+            },
+            error: () => {
+              this.errorMessage.set('Login failed: Invalid credentials');
+              this.isSubmitting.set(false);
+            },
+            complete: () => {
+              this.isSubmitting.set(false);
+            },
+          });
+      },
+      error: () => {
+        this.errorMessage.set('Failed to obtain CSRF token');
+        this.isSubmitting.set(false);
+      },
+    });
   }
 }

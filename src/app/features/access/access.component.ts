@@ -3,44 +3,74 @@ import {
   Component,
   inject,
 } from '@angular/core';
-import {PharmacyStore} from '../../core/state/pharmacy-store';
-import {UserRole} from '../../core/models/pharmacy.models';
-import {MatIconModule} from '@angular/material/icon';
+import { PharmacyApi } from '../../core/services/pharmacy-api';
+import { UserRole } from '../../core/models/pharmacy.models';
+import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { PharmacyStore } from '../../core/state/pharmacy-store';
 
 @Component({
 
   selector: 'app-access',
-  imports: [MatIconModule],
+  imports: [CommonModule, MatIconModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.component.html',
 
   styleUrls: ['./access.component.scss'],
 })
 export class Access {
+  private readonly api = inject(PharmacyApi);
   readonly store = inject(PharmacyStore);
-
-  readonly allRoles: UserRole[] = [
-    'Admin',
-    'Pharmacist',
-    'Cashier',
-    'Inventory',
-    'BranchManager',
-  ];
+  readonly roles$ = this.api.getRoles();
 
   readonly capabilities = [
-    {name: 'View Overview & Analytics', key: 'dashboard'},
-    {name: 'Execute POS Register Sales', key: 'sale'},
-    {name: 'Create & Edit Inventory Lots', key: 'inventory'},
-    {name: 'Clinical Prescription Verification & Dispensing', key: 'prescription'},
-    {name: 'Supplier Invoice OCR Intake', key: 'purchase'},
-    {name: 'Create Reorder Purchase Orders', key: 'reorder'},
-    {name: 'Approve & Reject Customer Refunds', key: 'return'},
-    {name: 'Coordinate Branch Transfers', key: 'branch'},
-    {name: 'View Compliance Audit Trail', key: 'audit'},
-    {name: 'Modify Pharmacy Profile & Workspace Settings', key: 'settings'},
+    { name: 'Dashboard', key: 'dashboard' },
+    { name: 'Sale', key: 'sale' },
+    { name: 'Inventory', key: 'inventory' },
+    { name: 'Prescription', key: 'prescription' },
+    { name: 'Purchase', key: 'purchase' },
+    { name: 'Reorder', key: 'reorder' },
+    { name: 'Return', key: 'return' },
+    { name: 'Branch', key: 'branch' },
+    { name: 'Audit', key: 'audit' },
+    { name: 'Settings', key: 'settings' },
+    { name: 'Reports', key: 'reports' },
   ];
+  newRoleName = '';
+  newRolePerms = new Set<string>();
+
+  togglePermission(key: string) {
+    if (this.newRolePerms.has(key)) {
+      this.newRolePerms.delete(key);
+    } else {
+      this.newRolePerms.add(key);
+    }
+  }
+
+  createRole() {
+    const name = this.newRoleName.trim();
+    const perms = Array.from(this.newRolePerms);
+    if (!name) {
+      this.store.showToast('Error', 'Role name is required', 'error');
+      return;
+    }
+    this.api.createRole({name, permissions: perms}).subscribe((role) => {
+      this.store.showToast('Role Created', `Role "${role.name}" added.`, 'success');
+      // Reset form
+      this.newRoleName = '';
+      this.newRolePerms.clear();
+    });
+  }
+
+  readonly allRoles: UserRole[] = ['Admin','Pharmacist','Cashier','Inventory','BranchManager'];
 
   isAllowed(role: UserRole, key: string): boolean {
+    // Prefer backend-provided permissions if available; otherwise fall back to static demo matrix.
+    const backendPermissions = this.store.authPermissions();
+    if (backendPermissions && backendPermissions.length > 0) {
+      return backendPermissions.includes(key);
+    }
     const roleMap: Record<UserRole, string[]> = {
       Admin: [
         'dashboard',

@@ -25,8 +25,8 @@ describe('Login Component', () => {
   it('should have initial admin credentials prefilled', () => {
     const fixture = TestBed.createComponent(Login);
     const component = fixture.componentInstance;
-    expect(component.loginForm.controls.email.value).toBe('admin@mediflow.io');
-    expect(component.loginForm.controls.branch.value).toBe('Downtown Flagship');
+    expect(component.loginForm.controls.username.value).toBe('admin@mediflow.io');
+    // Branch field removed; no longer part of login form.
   });
 
   it('should toggle password visibility', () => {
@@ -67,7 +67,7 @@ describe('Login Component', () => {
     if (pharmacist) {
       component.selectAccount(pharmacist);
       expect(component.selectedRole()).toBe('Pharmacist');
-      expect(component.loginForm.controls.email.value).toBe('pharmacist@mediflow.io');
+      expect(component.loginForm.controls.username.value).toBe('pharmacist@mediflow.io');
     }
   });
 });
